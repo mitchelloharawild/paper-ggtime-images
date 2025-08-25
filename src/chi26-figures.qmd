@@ -23,11 +23,13 @@ library(lubridate)
 library(tsibble)
 library(ggtime)
 library(patchwork)
+theme_set(theme_bw())
+
 uad <- as_tsibble(USAccDeaths) |> 
   as_tibble() |> 
   mutate(index = as.Date(index))
 
-theme_set(theme_bw())
+bank_calls <- fpp3::bank_calls
 
 pedestrian <- tsibble::pedestrian |>
   tsibble::fill_gaps() |>
@@ -53,6 +55,7 @@ When plotting daily/weekly/monthly/annual/... data in different timezones, the c
 
 
 ```{r}
+#| label: pedestrian-mel-lon-daily
 MEL_LDN_mockdata <- pedestrian |> 
   filter(
     between(Date, ymd("2015-03-02"), ymd("2015-03-12")),
@@ -90,6 +93,7 @@ daily_civil / daily_absolute
 When plotting sub-daily data that crosses a daylight saving time (DST) boundary, the civil time can change by 1 hour while the absolute time remains unchanged. This can lead to misleading visualisations if not handled correctly.
 
 ```{r}
+#| label: dst-shift
 tz_shift <- as_tibble(tsibbledata::gafa_stock) |>
   filter(
     (Symbol == "AAPL" & Date <= "2014-01-15") | 
@@ -140,9 +144,10 @@ The ggtime package instead defaults to plotting in civil time (also known as loc
 
 When plotting time series in civil time, changes in time zone (e.g., daylight saving time) are automatically handled by ggtime. Consider the number of pedestrians passing through Southern Cross Station (timezone Australia/Melbourne) in 2015. On April 5th at 3am, clocks were set back one hour to 2am (and so 2am-3am occurs twice in civil time). The clocks then moved forward again on October 4th at 2am, effectively skipping the hour from 2am-3am.
 
-In ggplot2, the time values are shown in absolute time so that the spacing between points is consistently 1 hour apart.
+In ggplot2, the time values are shown in **absolute time** so that the spacing between points is consistently 1 hour apart.
 
 ```{r}
+#| label: dst-ggplot2
 #| fig-height: 4
 pedestrian |>
   filter(
@@ -187,9 +192,10 @@ pedestrian |>
 
 <!-- TODO: Iterate on the shaded region with CH to make it clearer -->
 
-In ggtime, the time values are shown in civil time so that the 2am-3am hour occurs twice in April, and is skipped in October.
+In ggtime, the time values are shown in **civil time** so that the 2am-3am hour occurs twice in April, and is skipped in October.
 
 ```{r}
+#| label: dst-civil
 #| fig-height: 4
 pedestrian |>
   filter(
@@ -234,6 +240,7 @@ pedestrian |>
 
 If you want to see the absolute time values instead, you can use `position_time_absolute()`.
 ```{r}
+#| label: dst-absolute
 pedestrian |>
   filter(
     Sensor == "Southern Cross Station",
@@ -262,6 +269,7 @@ Differences in timezones are also relevant for precisely positioning daily data.
 Note: storing timezone information with dates requires the mixtime package, which is currently in development. The example below uses a helper function `force_tzs()` to add timezone information to `Date` dates for demonstration purposes.
 
 ```{r}
+#| label: pedestrian-mel-lon
 #| fig-height: 8
 #| code-fold: true
 MEL_LDN_mockdata <- pedestrian |>
@@ -322,11 +330,12 @@ daily_absolute <- MEL_LDN_mockdata |>
 
 ![](chi26-figures/fig-wishlist-01.jpg)
 
+Presented separately for you to experiment with layouts.
+
+**Sawtooth**
 
 ```{r}
-uad <- as_tsibble(USAccDeaths) |> 
-  as_tibble() |> 
-  mutate(index = as.Date(index))
+#| label: discrete-cycle-sawtooth
 uad |> 
   ggplot(aes(x = month(index), y = value)) +
   geom_line() +
@@ -335,11 +344,16 @@ uad |>
 ```
 
 
+**Loop w/ missing data Dec/Jan**
+
+(using discretised cyclical time month of year)
+
 ```{r}
+#| label: coord-loop-cartesian-missing
 uad |> 
   ggplot(aes(x = month(index), y = value, group = year(index))) +
   geom_line() +
-  geom_point(aes(colour = year(index))) +
+  geom_point(aes(colour = year(index)), size = 2) +
   geom_vline(
     xintercept = c(1, 12),
     linetype = "dashed",
@@ -348,53 +362,114 @@ uad |>
   labs(x = "Month", y = "Deaths")
 ```
 
+**Loop w/ overlapping Dec/Jan (polar)**
+
+(using integer cyclical time month of year)
+
 ```{r}
+#| label: coord-loop-polar-overlap
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = month(index), y = value, group = year(index))) +
+  geom_line() +
+  geom_point(aes(colour = year(index)), size = 2) +
+  geom_vline(
+    xintercept = c(1, 12),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") 
+```
+
+**Loop w/ missing data Dec/Jan (polar)**
+
+(using discretised cyclical time month of year)
+
+```{r}
+#| label: coord-loop-polar-missing
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = month(index, label = TRUE), y = value, group = year(index))) +
+  geom_line() +
+  geom_point(aes(colour = year(index)), size = 2) +
+  geom_vline(
+    xintercept = c(1, 12),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") 
+```
+
+**Loop in ggtime with coord_loop()**
+
+```{r}
+#| label: coord-loop-ggtime-cartesian
 uad |> 
   ggplot(aes(x=index, y=value)) +
+  geom_line() +
+  geom_point(aes(colour = year(index)), size = 2) +
+  geom_vline(
+    xintercept = as.Date(c(1, 365-30)),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  coord_loop(time_loop = "1 year", expand = FALSE, ljust = 14)
+```
+
+**Loop in ggtime with coord_loop(polar = TRUE)**
+
+WIP awaiting mjskay to extend coord_loop() to clip polar projected rectangles.
+
+```{r}
+#| label: coord-loop-ggtime-polar
+#| eval: false
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = index, y = value)) +
+  geom_line() +
+  geom_point(aes(colour = year(index)), size = 2) +
+  coord_loop(time_loop = "1 year", polar = TRUE) +
+  labs(x = "Month", y = "Deaths") 
+```
+
+Work-around alternative using ggplot2 and carefully selected scale/coord limits.
+
+```{r}
+#| label: coord-loop-polar
+#| code-fold: true
+month0 = min(uad$index)
+uad |>
+  ggplot(aes(x = index, y = value)) +
   geom_line() +
   geom_vline(
     xintercept = as.Date(c(1, 365-30)),
     linetype = "dashed",
     colour = "grey50"
   ) +
-  coord_loop(time_loop = "1 year", expand = FALSE)
-```
-
-```{r}
-as_tsibble(USAccDeaths) |>
-  ggplot(aes(x = month(index), y = value, group = year(index))) +
-  geom_line() +
-  coord_polar() +
-  labs(x = "Month", y = "Deaths") 
-```
-
-```{r}
-as_tsibble(USAccDeaths) |>
-  ggplot(aes(x = month(index, label = TRUE), y = value, group = year(index))) +
-  geom_line() +
-  coord_polar() +
-  labs(x = "Month", y = "Deaths") 
-```
-
-```{r}
-#| eval: false
-as_tsibble(USAccDeaths) |>
-  ggplot(aes(x = index, y = value)) +
-  geom_line() +
-  coord_loop(time_loop = "1 year", coord = coord_polar()) +
-  labs(x = "Month", y = "Deaths") 
-```
-
-```{r}
-month0 = min(uad$index)
-uad |>
-  ggplot(aes(x = index, y = value)) +
-  geom_line() +
   coord_polar() +
   labs(x = "Month", y = "Deaths") +
   scale_x_date(
     limits = month0 + months(c(0, 12)),
     oob = scales::oob_keep,
+    breaks = month0 + months(0:11),
+    date_labels = "%b"
+  )
+```
+
+Or alternatively with `coord_radial()` and coord limits...
+
+```{r}
+#| label: coord-loop-radial
+uad |>
+  ggplot(aes(x = index, y = value)) +
+  geom_line() +
+  coord_radial(thetalim = month0 + c(0, 332)) +
+  labs(x = "Month", y = "Deaths") +
+  geom_vline(
+    xintercept = as.Date(c(1, 365 - 30)),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  scale_x_date(
     breaks = month0 + months(0:11),
     date_labels = "%b"
   )
@@ -407,23 +482,7 @@ uad |>
 When discretising cyclical time to text using `strftime()`, e.g. "2025-08-18" to "Aug", the resulting text is not ordered (unless using lubridate which uses ordered factors, which has a lesser issue of not preserving temporal mass).
 
 ```{r}
-fct_order_facet <- uad |> 
-  ggplot(aes(x = as.Date(index), y = value)) +
-  geom_line() +
-  labs(x = "Month", y = "Deaths") +
-  facet_grid(cols = vars(month(index, label = TRUE)))
-
-fct_order_cartesian <- as_tsibble(USAccDeaths) |>
-  ggplot(aes(x = month(index, label = TRUE), y = value, group = year(index))) +
-  geom_line() +
-  labs(x = "Month", y = "Deaths") 
-
-fct_order_polar <- as_tsibble(USAccDeaths) |>
-  ggplot(aes(x = month(index, label = TRUE), y = value, group = year(index))) +
-  geom_line() +
-  coord_polar() +
-  labs(x = "Month", y = "Deaths") 
-
+#| label: unordered-discrete-cycle
 chr_order_facet <- uad |> 
   ggplot(aes(x = as.Date(index), y = value)) +
   geom_line() +
@@ -445,6 +504,23 @@ chr_order_polar <- as_tsibble(USAccDeaths) |>
 **Suggested alternative layout**
 
 ```{r}
+#| label: ordered-discrete-cycle
+fct_order_facet <- uad |> 
+  ggplot(aes(x = as.Date(index), y = value)) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths") +
+  facet_grid(cols = vars(month(index, label = TRUE)))
+
+fct_order_cartesian <- as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = month(index, label = TRUE), y = value, group = year(index))) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths") 
+
+fct_order_polar <- as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = month(index, label = TRUE), y = value, group = year(index))) +
+  geom_line() +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") 
 (fct_order_facet | fct_order_cartesian | fct_order_polar) /
 (chr_order_facet | chr_order_cartesian | chr_order_polar)
 ```
@@ -455,17 +531,13 @@ chr_order_polar <- as_tsibble(USAccDeaths) |>
 
 ```{r}
 #| label: implicit-missing
-implicit_na_before <- fpp3::bank_calls |> 
-  filter(DateTime < ymd_hms("2003-03-20 00:00:00")) |>
+implicit_na_before <- bank_calls |> 
+  filter(DateTime < ymd_hms("2003-03-15 00:00:00")) |>
   ggplot(aes(x = DateTime, y = Calls)) +
-  geom_line() + 
-  scale_x_datetime(
-    breaks = "6 hours",
-    date_labels = "%m %d %H:%M"
-  )
+  geom_line()
 
-implicit_na_after <- fpp3::bank_calls |> 
-  filter(DateTime < ymd_hms("2003-03-20 00:00:00")) |>
+implicit_na_after <- bank_calls |> 
+  filter(DateTime < ymd_hms("2003-03-15 00:00:00")) |>
   fill_gaps() |> 
   ggplot(aes(x = DateTime, y = Calls)) +
   geom_line()
@@ -479,6 +551,7 @@ ggtime is designed to work well with other extension packages, especially those 
 
 ```{r}
 #| label: ggtime-ggdist
+#| message: false
 library(fable)
 ped_train <- pedestrian |> 
   filter(
@@ -504,8 +577,11 @@ ped_train |>
 <!-- ### Continuous time -->
 <!-- * Continuous visualisation with different resolutions -->
 
+Code creating *continuous* time series plots with different temporal aggregations.
+
 ```{r}
 #| label: continuous-time-resolution
+#| message: false
 res_30m_cont <- vic_elec |> 
   ggplot(aes(x = Time, y = Demand)) + 
   geom_line() + 
@@ -535,8 +611,11 @@ res_1w_cont <- vic_elec |>
 <!-- ### Cyclical time -->
 <!-- * Cyclical/Seasonal visualisation with different resolutions -->
 
+Code creating *cyclical* time series plots with different temporal aggregations.
+
 ```{r}
 #| label: cyclical-time-resolution
+#| message: false
 res_30m_loop_1y <- vic_elec |> 
   gg_season(period = "year")
 res_1d_loop_1y <- vic_elec |> 
@@ -557,11 +636,10 @@ res_1d_loop_1w <- vic_elec |>
   gg_season(period = "week")
 ```
 
-### Figure layouts
-
-**Matching drawing**
+**Plots arranged to match drawing**
 
 ```{r}
+#| label: resolution-drawn-layout
 ((
   (res_30m_cont + geom_vline(xintercept = make_date(2012:2015, 1, 1), linetype = "dashed", color = "gray50")) / 
   res_1w_cont_bad
@@ -569,13 +647,14 @@ res_1d_loop_1w <- vic_elec |>
 (
   res_30m_loop_1y /
   (res_30m_loop_1w + annotate("rect", xmin = as.POSIXct("1973-01-06", tz = "UTC"), xmax = as.POSIXct("1973-01-08", tz = "UTC"), ymin = -Inf, ymax = Inf, fill = "grey80", alpha = 0.3))
-)) & theme_minimal()
+))
 
 ```
 
 **Alternative(s)**
 
 ```{r}
+#| label: resolution-alternative-layout
 (res_30m_cont / res_1d_cont / res_1w_cont) |
 (res_30m_loop_1y / res_1d_loop_1y / res_1w_loop_1y)
 ```
@@ -587,6 +666,7 @@ res_1d_loop_1w <- vic_elec |>
 ```{r}
 #| label: nyt-floyd
 #| code-fold: true
+#| message: false
 #| fig-width: 12
 #| fig-height: 6
 library(ggplot2)
@@ -674,19 +754,20 @@ p1 <- (readr::read_csv("chi26-figures/nyt-floyd.csv") |>
   geom_line(size = 1.2) +
   geom_point(size = 2.5)) |> 
   nyt_floyd_plot_common()
+p1
 
 p2 <- (readr::read_csv("chi26-figures/nyt-floyd.csv") |> 
   ggplot(aes(x = year, y = percent_change, colour = type)) +
   geom_step(size = 1.2)) |> 
   nyt_floyd_plot_common()
-
+p2
 
 p3 <- (readr::read_csv("chi26-figures/nyt-floyd.csv") |> 
   ggplot(aes(x = year + 0.5, y = percent_change, colour = type)) +
   geom_line(size = 1.2) +
   geom_point(size = 2.5)) |> 
   nyt_floyd_plot_common(xoffset = 0.5)
-
+p3
 
 library(patchwork)
 ((p1/p3)|p2) & scale_x_continuous(limits = c(2015, 2024.5), breaks = seq(2015, 2024, 0.5), labels = scales::label_number()) & annotate("rect", xmin = 2020, xmax = 2021, 
@@ -738,6 +819,7 @@ find_peaks <- function(x, min_distance = 1, threshold = 0) {
 Locations of automatically detected peaks in the lynx data:
 
 ```{r}
+#| label: lynx-peaks
 tsibbledata::pelt |> 
   ggplot(aes(x = Year, y = Lynx)) + 
   geom_line() + 
@@ -749,6 +831,7 @@ tsibbledata::pelt |>
 Hypothetical `coord_loop()` looping at these peak points:
 
 ```{r}
+#| label: lynx-peaks-loop
 tsibbledata::pelt |> 
   ggplot(aes(x = Year, y = Lynx)) + 
   geom_line() + 
@@ -759,6 +842,7 @@ tsibbledata::pelt |>
 
 
 ```{r}
+#| label: ragged-justified
 month_progress <- unlist(lapply(lubridate:::N_DAYS_IN_MONTHS, \(x) seq(1, x)/x))
 
 time <- make_date(year = 2025) + 0:364
