@@ -1,0 +1,609 @@
+---
+title: Figures for CHI26 paper
+format: 
+  html:
+    code-fold: true
+    embed-resources: true
+  # revealjs:
+  #   scrollable: true
+  #   toc: true     # this adds a TOC slide at the beginning
+execute:
+  cache: true
+  echo: true
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| echo: true
+library(ggplot2)
+library(tsibbledata)
+library(dplyr)
+library(lubridate)
+library(tsibble)
+library(ggtime)
+library(patchwork)
+uad <- as_tsibble(USAccDeaths) |> 
+  as_tibble() |> 
+  mutate(index = as.Date(index))
+
+theme_set(theme_bw())
+
+pedestrian <- tsibble::pedestrian |>
+  tsibble::fill_gaps() |>
+  mutate(Date = as.Date(strftime(Date_Time, "%Y-%m-%d"))) |>
+  arrange(Sensor, Date_Time)
+
+# Fudge the data to correctly handle DST changes
+# Since the data was provided in civil time, the 2AM counts before/after DST are combined.
+pedestrian[53763, "Count"] <- 9
+pedestrian[53764, "Count"] <- 5
+```
+
+## Timezones
+
+![](chi26-figures/fig-wishlist-00.jpg)
+
+Timezones are tricky to accurately represent in visualisations. In ggplot2, the `POSIXct` time class is plotted in absolute time, while the `Date` class is plotted in civil time (since `Date` lacks timezone information).
+
+### >Daily timezone differences
+
+When plotting daily/weekly/monthly/annual/... data in different timezones, the civil time of the day is the same regardless of the timezone. However, the absolute time of the day can be very different in different timezones.
+
+
+
+```{r}
+MEL_LDN_mockdata <- pedestrian |> 
+  filter(
+    between(Date, ymd("2015-03-02"), ymd("2015-03-12")),
+    Sensor %in% c("Bourke Street Mall (North)", "QV Market-Elizabeth St (West)")
+  ) |> 
+  index_by(Date) |>
+  group_by(Sensor) |>
+  summarise(Count = sum(Count)) |>
+  mutate(
+    Sensor = factor(Sensor, levels = c("Bourke Street Mall (North)", "QV Market-Elizabeth St (West)"), labels = c("Melbourne", "London")),
+    Count = case_when(Sensor == "London" ~ Count*1.75, TRUE ~ Count),
+  )
+  
+daily_civil <- MEL_LDN_mockdata |> 
+  autoplot(Count) + 
+  geom_point()
+daily_absolute <- MEL_LDN_mockdata |>
+  mutate(
+    Date = force_tzs(
+      as.POSIXct(Date), 
+      tzones = case_match(Sensor, 
+        "Melbourne" ~ "Australia/Melbourne", 
+        "London" ~ "Europe/London"
+      )
+    )
+  ) |> 
+  autoplot(Count) + 
+  geom_point()
+
+daily_civil / daily_absolute
+```
+
+### Sub-daily DST changes in civil time
+
+When plotting sub-daily data that crosses a daylight saving time (DST) boundary, the civil time can change by 1 hour while the absolute time remains unchanged. This can lead to misleading visualisations if not handled correctly.
+
+```{r}
+tz_shift <- as_tibble(tsibbledata::gafa_stock) |>
+  filter(
+    (Symbol == "AAPL" & Date <= "2014-01-15") | 
+      (Symbol == "GOOG" & Date <= "2014-01-13")
+  ) |>
+  mutate(Date = Sys.Date() + hours(c(1:3, 3:9, 1:2, 4:9)), DST = ifelse(Symbol == "AAPL", "DST Ends", "DST Begins")) |> 
+  slice(1:3, 3:12, 12:n()) |> 
+  mutate(
+    open = duplicated(Open),
+    closed = c(open[-1], FALSE),
+    Date = Date + open*3600*((DST=="DST Begins")*2-1)
+  ) 
+
+ggplot2_civil <- tz_shift |> 
+  ggplot(aes(x = Date, y = Close)) + 
+  geom_path(data = filter(tz_shift, !open)) +
+  facet_wrap(vars(DST), ncol = 2, scales = "free_y") + 
+  scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 1)) + 
+  guides(shape = "none")
+
+ggtime_civil <- tz_shift |> 
+  ggplot(aes(x = Date, y = Close)) + 
+  geom_path(aes(group = cumsum(open))) + 
+  geom_path(linetype = "dashed", data = filter(tz_shift, open | closed)) +
+  facet_wrap(vars(DST), ncol = 2, scales = "free_y") + 
+  scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 1)) + 
+  guides(shape = "none")
+
+ggplot2_civil / ggtime_civil 
+```
+
+
+
+## Cyclical time looping
+
+![](chi26-figures/fig-wishlist-01.jpg)
+
+
+```{r}
+uad <- as_tsibble(USAccDeaths) |> 
+  as_tibble() |> 
+  mutate(index = as.Date(index))
+uad |> 
+  ggplot(aes(x = month(index), y = value)) +
+  geom_line() +
+  geom_point(aes(colour = year(index))) +
+  labs(x = "Month", y = "Deaths")
+```
+
+
+```{r}
+uad |> 
+  ggplot(aes(x = month(index), y = value, group = year(index))) +
+  geom_line() +
+  geom_point(aes(colour = year(index))) +
+  geom_vline(
+    xintercept = c(1, 12),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  labs(x = "Month", y = "Deaths")
+```
+
+```{r}
+uad |> 
+  ggplot(aes(x=index, y=value)) +
+  geom_line() +
+  geom_vline(
+    xintercept = as.Date(c(1, 365-30)),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  coord_loop(time_loop = "1 year", expand = FALSE)
+```
+
+```{r}
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = month(index), y = value, group = year(index))) +
+  geom_line() +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") 
+```
+
+```{r}
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = month(index, label = TRUE), y = value, group = year(index))) +
+  geom_line() +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") 
+```
+
+```{r}
+#| eval: false
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = index, y = value)) +
+  geom_line() +
+  coord_loop(time_loop = "1 year", coord = coord_polar()) +
+  labs(x = "Month", y = "Deaths") 
+```
+
+```{r}
+month0 = min(uad$index)
+uad |>
+  ggplot(aes(x = index, y = value)) +
+  geom_line() +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") +
+  scale_x_date(
+    limits = month0 + months(c(0, 12)),
+    oob = scales::oob_keep,
+    breaks = month0 + months(0:11),
+    date_labels = "%b"
+  )
+```
+
+## Unordered discretisation of cyclical time
+
+![](chi26-figures/fig-wishlist-02a.jpg)
+
+When discretising cyclical time to text using `strftime()`, e.g. "2025-08-18" to "Aug", the resulting text is not ordered (unless using lubridate which uses ordered factors, which has a lesser issue of not preserving temporal mass).
+
+```{r}
+fct_order_facet <- uad |> 
+  ggplot(aes(x = as.Date(index), y = value)) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths") +
+  facet_grid(cols = vars(month(index, label = TRUE)))
+
+fct_order_cartesian <- as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = month(index, label = TRUE), y = value, group = year(index))) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths") 
+
+fct_order_polar <- as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = month(index, label = TRUE), y = value, group = year(index))) +
+  geom_line() +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") 
+
+chr_order_facet <- uad |> 
+  ggplot(aes(x = as.Date(index), y = value)) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths") +
+  facet_grid(cols = vars(strftime(index, format = "%b")))
+chr_order_cartesian <- as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = strftime(index, format = "%b"), y = value, group = year(index))) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths") 
+chr_order_polar <- as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = strftime(index, format = "%b"), y = value, group = year(index))) +
+  geom_line() +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") 
+
+(chr_order_facet | chr_order_cartesian | chr_order_polar)
+```
+
+**Suggested alternative layout**
+
+```{r}
+(fct_order_facet | fct_order_cartesian | fct_order_polar) /
+(chr_order_facet | chr_order_cartesian | chr_order_polar)
+```
+
+## Implicit missing values
+
+![](chi26-figures/fig-wishlist-02b.jpg)
+
+```{r}
+#| label: implicit-missing
+implicit_na_before <- fpp3::bank_calls |> 
+  filter(DateTime < ymd_hms("2003-03-20 00:00:00")) |>
+  ggplot(aes(x = DateTime, y = Calls)) +
+  geom_line() + 
+  scale_x_datetime(
+    breaks = "6 hours",
+    date_labels = "%m %d %H:%M"
+  )
+
+implicit_na_after <- fpp3::bank_calls |> 
+  filter(DateTime < ymd_hms("2003-03-20 00:00:00")) |>
+  fill_gaps() |> 
+  ggplot(aes(x = DateTime, y = Calls)) +
+  geom_line()
+
+implicit_na_before | implicit_na_after
+```
+
+## ggtime <3 ggdist
+
+ggtime is designed to work well with other extension packages, especially those that enable plotting of other semantic variables such as ggdist for visualising distributions.
+
+```{r}
+#| label: ggtime-ggdist
+library(fable)
+ped_train <- pedestrian |> 
+  filter(
+    Sensor == "Southern Cross Station",
+    Date > ymd("2015-01-30") &
+    Date < ymd("2015-04-21")
+  ) |> 
+    index_by(Date) |>
+    summarise(Count = sum(Count))
+ped_train |> 
+  model(
+    ets = ETS(Count)
+  ) |> 
+  forecast(h = "4 weeks") |>
+  autoplot(ped_train)
+```
+
+## Temporal resolution / aggregation
+
+![](chi26-figures/fig-wishlist-03.jpg)
+
+
+<!-- ### Continuous time -->
+<!-- * Continuous visualisation with different resolutions -->
+
+```{r}
+#| label: continuous-time-resolution
+res_30m_cont <- vic_elec |> 
+  ggplot(aes(x = Time, y = Demand)) + 
+  geom_line() + 
+  labs(x = "Time", y = "Demand (MW)")
+res_1d_cont <- vic_elec |> 
+  index_by(Date) |>
+  summarise(Demand = sum(Demand)) |>
+  ggplot(aes(x = Date, y = Demand)) + 
+  geom_line() + 
+  labs(x = "Time", y = "Demand (MW)")
+res_1w_cont_bad <- vic_elec |> 
+  index_by(Week = yearweek(Time)) |>
+  summarise(Demand = sum(Demand)) |>
+  ggplot(aes(x = Week, y = Demand)) + 
+  geom_line() + 
+  labs(x = "Time", y = "Demand (MW)")
+res_1w_cont <- vic_elec |> 
+  index_by(Week = yearweek(Time)) |>
+  summarise(Demand = sum(Demand)) |>
+  # Removing incomplete aggregation weeks by row.
+  slice(-1, -n()) |>
+  ggplot(aes(x = Week, y = Demand)) + 
+  geom_line() + 
+  labs(x = "Time", y = "Demand (MW)")
+```
+
+<!-- ### Cyclical time -->
+<!-- * Cyclical/Seasonal visualisation with different resolutions -->
+
+```{r}
+#| label: cyclical-time-resolution
+res_30m_loop_1y <- vic_elec |> 
+  gg_season(period = "year")
+res_1d_loop_1y <- vic_elec |> 
+  index_by(Date) |>
+  summarise(Demand = sum(Demand)) |>
+  gg_season(period = "year")
+res_1w_loop_1y <- vic_elec |> 
+  index_by(Week = yearweek(Time)) |>
+  summarise(Demand = sum(Demand)) |>
+  # Removing incomplete aggregation weeks by row
+  slice(-1, -n()) |> 
+  gg_season(period = "year")
+res_30m_loop_1w <- vic_elec |> 
+  gg_season(period = "week")
+res_1d_loop_1w <- vic_elec |> 
+  index_by(Date = date(Time)) |>
+  summarise(Demand = sum(Demand)) |>
+  gg_season(period = "week")
+```
+
+### Figure layouts
+
+**Matching drawing**
+
+```{r}
+((
+  (res_30m_cont + geom_vline(xintercept = make_date(2012:2015, 1, 1), linetype = "dashed", color = "gray50")) / 
+  res_1w_cont_bad
+) | 
+(
+  res_30m_loop_1y /
+  (res_30m_loop_1w + annotate("rect", xmin = as.POSIXct("1973-01-06", tz = "UTC"), xmax = as.POSIXct("1973-01-08", tz = "UTC"), ymin = -Inf, ymax = Inf, fill = "grey80", alpha = 0.3))
+)) & theme_minimal()
+
+```
+
+**Alternative(s)**
+
+```{r}
+(res_30m_cont / res_1d_cont / res_1w_cont) |
+(res_30m_loop_1y / res_1d_loop_1y / res_1w_loop_1y)
+```
+
+## Granularity alignment (NYT)
+
+![](chi26-figures/fig-wishlist-04.jpg)
+
+```{r}
+#| label: nyt-floyd
+#| code-fold: true
+#| fig-width: 12
+#| fig-height: 6
+library(ggplot2)
+library(dplyr)
+
+col_homicide <- "#FB8C58"
+col_police_killings <- "#980000"
+
+nyt_floyd_plot_common <- function(p, xoffset = 0) {
+  p +   
+  # Add vertical line for George Floyd's death (assuming 2020)
+  geom_vline(xintercept = 2020.3686, linetype = "dashed", color = "gray60", size = 0.8) +
+  
+  # Custom colors to match the reference
+  scale_color_manual(values = c("Homicides" = col_homicide, "Police killings" = col_police_killings)) +
+  
+  # Format y-axis as years
+  scale_x_continuous(
+    breaks = 2015:2024 + xoffset, labels = \(x) scales::number(floor(x)),
+    expand = c(0, 0.2)
+  ) +
+
+  # Format y-axis as percentages
+  scale_y_continuous(
+    breaks = seq(-10, 50, 10), labels = scales::label_percent(scale = 1),
+    limits = c(-10, 50), expand = c(0, 0)
+  ) +
+
+  # Customize theme
+  theme_minimal() +
+  theme(
+    # Remove legend
+    legend.position = "none",
+    
+    # Grid lines
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "gray90", size = 0.5),
+    
+    # Axis styling
+    axis.line.x = element_line(color = "black", size = 0.8),
+    axis.text = element_text(color = "gray30", size = 10),
+    axis.title = element_blank(),
+    axis.ticks.x = element_line(color = "gray30"),
+    axis.ticks.y = element_blank(),
+    
+    # Plot styling
+    plot.title = element_text(size = 16, face = "bold", margin = margin(b = 5)),
+    plot.subtitle = element_text(size = 12, color = "gray50", margin = margin(b = 20)),
+    plot.caption = element_text(size = 9, color = "gray50", hjust = 0, margin = margin(t = 20)),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA)
+  ) +
+  
+  # Add labels
+  labs(
+    title = "Police killings continued to rise as other homicides fell",
+    subtitle = "Percent change in homicides and police killings since 2015",
+    caption = "Sources: Analysis of data compiled by The Washington Post and Mapping Police Violence. Homicide data from the\nCenters for Disease Control and Prevention. — The New York Times"
+  ) +
+  
+  # Add direct labels for the lines (you may need to adjust positions based on your data)
+  annotate(
+    "text", x = 2022.3 + xoffset, y = 39, label = "Homicides", 
+    color = col_homicide, size = 4, hjust = 0, fontface = "bold"
+  ) +
+  
+  annotate(
+    "text", x = 2022.3 + xoffset, y = 6, label = "Police killings", 
+    color = col_police_killings, size = 4, hjust = 0, fontface = "bold"
+  ) +
+  
+  # Add annotation for George Floyd's death
+  annotate(
+    "label", x = 2020.3686, y = 50-xoffset*10, label = "Death of\nGeorge Floyd\nMay 25, 2020", 
+     hjust = 0.5, vjust = 0.3, size = 4, color = "gray30", fill = "white", border.colour = "white"
+  ) +
+  
+  # Expand x-axis to make room for labels
+  coord_cartesian(clip = "off")
+}
+
+p1 <- (readr::read_csv("chi26-figures/nyt-floyd.csv") |> 
+  ggplot(aes(x = year, y = percent_change, colour = type)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2.5)) |> 
+  nyt_floyd_plot_common()
+
+p2 <- (readr::read_csv("chi26-figures/nyt-floyd.csv") |> 
+  ggplot(aes(x = year, y = percent_change, colour = type)) +
+  geom_step(size = 1.2)) |> 
+  nyt_floyd_plot_common()
+
+
+p3 <- (readr::read_csv("chi26-figures/nyt-floyd.csv") |> 
+  ggplot(aes(x = year + 0.5, y = percent_change, colour = type)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2.5)) |> 
+  nyt_floyd_plot_common(xoffset = 0.5)
+
+
+library(patchwork)
+((p1/p3)|p2) & scale_x_continuous(limits = c(2015, 2024.5), breaks = seq(2015, 2024, 0.5), labels = scales::label_number()) & annotate("rect", xmin = 2020, xmax = 2021, 
+           ymin = -Inf, ymax = Inf, fill = "grey80", alpha = 0.3)
+```
+
+## Looping and warping (ragged and justified)
+
+![](chi26-figures/fig-wishlist-05.jpg)
+
+Stretch goal, requires:
+
+* `coord_loop()` to support specific loop points (`loop` not just `time_loop`).
+* `scale_*_mixtime()` to support warp points (`warp` and `time_warp`).
+
+```{r}
+#| label: find-peaks
+#| code-fold: true
+
+#' Find peaks in time series data
+#'
+#' @param x Numeric vector of time series values
+#' @param min_distance Minimum distance between peaks (default: 1)
+#' @param threshold Minimum height threshold for peaks (default: 0)
+#' @return Integer vector of peak indices
+#' @export
+find_peaks <- function(x, min_distance = 1, threshold = 0) {
+  n <- length(x)
+  if (n < 3) return(integer(0))
+  
+  # Find local maxima
+  peaks <- integer(0)
+  for (i in 2:(n-1)) {
+    if (x[i] > x[i-1] && x[i] > x[i+1] && x[i] > threshold) {
+      peaks <- c(peaks, i)
+    }
+  }
+  
+  # Apply distance constraint
+  if (length(peaks) > 1 && min_distance > 1) {
+    keep <- c(TRUE, diff(peaks) >= min_distance)
+    peaks <- peaks[keep]
+  }
+  
+  peaks
+}
+```
+
+Locations of automatically detected peaks in the lynx data:
+
+```{r}
+tsibbledata::pelt |> 
+  ggplot(aes(x = Year, y = Lynx)) + 
+  geom_line() + 
+  geom_point(size = 3, colour = "red", 
+             data = tsibbledata::pelt |> slice(find_peaks(Lynx))) +
+  labs(x = "Time", y = "Lynx trapped")
+```
+
+Hypothetical `coord_loop()` looping at these peak points:
+
+```{r}
+tsibbledata::pelt |> 
+  ggplot(aes(x = Year, y = Lynx)) + 
+  geom_line() + 
+  geom_point(size = 3, colour = "red", 
+             data = slice(tsibbledata::pelt, find_peaks(Lynx))) +
+  coord_loop(loop = slice(tsibbledata::pelt, find_peaks(Lynx))$Year)
+```
+
+
+```{r}
+month_progress <- unlist(lapply(lubridate:::N_DAYS_IN_MONTHS, \(x) seq(1, x)/x))
+
+time <- make_date(year = 2025) + 0:364
+# y <- rnorm(length(month_progress), mean = month_progress^4, sd = month_progress*0.1)
+y <- sin(month_progress*2*pi) + rnorm(365, sd = 0.1)
+
+
+tbl_ragged <- tibble(time, y, month_progress)
+plt_ragged <- tbl_ragged |> 
+  ggplot(aes(x = time - floor_date(time, "month"), y = y, group = month(time))) + 
+  geom_line() +
+  geom_point(
+    data = tbl_ragged |> group_by(yearmonth(time)) |> filter(time %in% range(time)),
+    size = 3
+  ) + 
+  labs(x = "Day of month")
+
+month_progress <- unlist(lapply(lubridate:::N_DAYS_IN_MONTHS, \(x) seq(1, x)/x))
+
+time <- make_date(year = 2025) + 0:364
+# y <- rnorm(length(month_progress), mean = month_progress^4, sd = month_progress*0.1)
+y <- sin(month_progress*2*pi) + rnorm(365, sd = 0.1)
+
+tbl_justified <- tibble(time, y, month_progress)
+plt_justified <- tbl_justified |> 
+  ggplot(aes(x = month_progress, y = y, group = month(time))) + 
+  scale_x_continuous(labels = scales::percent) +
+  geom_line() +
+  geom_point(
+    data = tbl_justified|> group_by(yearmonth(time)) |> filter(time %in% range(time)), 
+    size = 3
+  ) +
+    labs(x = "Percentage of month")
+  
+
+plt_ragged / plt_justified
+(plt_ragged + 
+  facet_grid(rows = vars(month(time, label = TRUE)))) |
+(plt_justified +
+  facet_grid(rows = vars(month(time, label = TRUE))))
+```
+
+
