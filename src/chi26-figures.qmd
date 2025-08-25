@@ -121,7 +121,202 @@ ggtime_civil <- tz_shift |>
 ggplot2_civil / ggtime_civil 
 ```
 
+### Timezones on pedestrian counts (from ggtime vignette)
 
+
+Time series plotted with ggplot2 are typically shown in absolute time, but ggtime defaults to plotting in civil time (also known as local or clock time). Human activities are usually scheduled in local time, so seasonality and other calendar patterns are more evident in local time.
+
+Timezones are usually only associated with `POSIXt` date-times, however timezones are also relevant `Date` dates and all other temporal granularities. Time series plotted with ggplot2 are shown in absolute time, however since `Date` types don't store timezone information, they are effectively plotted in civil time*.
+
+The ggtime package instead defaults to plotting in civil time (also known as local or clock time). Human activities are usually scheduled in local time, so seasonality and other calendar patterns are more evident in local time. With mixtime, timezones can be specified with all temporal granularities (dates, yearmonth, ...), allowing for more precise positioning of time in different timezones.
+
+|                  | ggplot2         | ggtime (default) `position_civil()` | ggtime `position_absolute()` |
+|------------------|:---------------:|:-----------------:|:-----------------:|
+| **POSIXt**       | Absolute        | Civil             | Absolute          |
+| **Date**         | Civil*          | Civil             | Absolute          |
+| **Other times**  | Not-supported   | Civil             | Absolute          |
+
+<!-- DST -->
+
+When plotting time series in civil time, changes in time zone (e.g., daylight saving time) are automatically handled by ggtime. Consider the number of pedestrians passing through Southern Cross Station (timezone Australia/Melbourne) in 2015. On April 5th at 3am, clocks were set back one hour to 2am (and so 2am-3am occurs twice in civil time). The clocks then moved forward again on October 4th at 2am, effectively skipping the hour from 2am-3am.
+
+In ggplot2, the time values are shown in absolute time so that the spacing between points is consistently 1 hour apart.
+
+```{r}
+#| fig-height: 4
+pedestrian |>
+  filter(
+    Sensor == "Southern Cross Station",
+    Date %in% as.Date(c("2015-04-05", "2015-10-04"))
+  ) |>
+  ggplot(aes(x = Date_Time, y = Count)) +
+  geom_line() +
+  geom_point() +
+  facet_grid(
+    cols = vars(Date),
+    scales = "free_x",
+    labeller = labeller(
+      Date = c(
+        "2015-04-05" = "2015-04-05\n(DST ends)",
+        "2015-10-04" = "2015-10-04\n(DST begins)"
+      )
+    )
+  ) +
+  scale_x_datetime(date_labels = "%H:%M") +
+  geom_rect(
+    aes(xmin = xmin, xmax = xmax),
+    ymin = -Inf,
+    ymax = Inf,
+    fill = "grey20",
+    alpha = 0.2,
+    data = data.frame(
+      Date_Time = as.POSIXct(NA),
+      Count = Inf,
+      xmin = as.POSIXct(
+        c("2015-04-05 01:59.999", "2015-10-04 02:00"),
+        tz = "Australia/Melbourne"
+      ),
+      xmax = as.POSIXct(
+        c("2015-04-05 03:00", "2015-10-04 04:00"),
+        tz = "Australia/Melbourne"
+      ),
+      Date = as.Date(c("2015-04-05", "2015-10-04"))
+    )
+  )
+```
+
+<!-- TODO: Iterate on the shaded region with CH to make it clearer -->
+
+In ggtime, the time values are shown in civil time so that the 2am-3am hour occurs twice in April, and is skipped in October.
+
+```{r}
+#| fig-height: 4
+pedestrian |>
+  filter(
+    Sensor == "Southern Cross Station",
+    Date %in% as.Date(c("2015-04-05", "2015-10-04"))
+  ) |>
+  ggplot(aes(x = Date_Time, y = Count)) +
+  geom_time_line() +
+  geom_point(position = position_time_civil()) +
+  facet_grid(
+    cols = vars(Date),
+    scales = "free_x",
+    labeller = labeller(
+      Date = c(
+        "2015-04-05" = "2015-04-05\n(DST ends)",
+        "2015-10-04" = "2015-10-04\n(DST begins)"
+      )
+    )
+  ) +
+  scale_x_datetime(date_labels = "%H:%M") +
+  geom_rect(
+    aes(xmin = xmin, xmax = xmax),
+    ymin = -Inf,
+    ymax = Inf,
+    fill = "grey20",
+    alpha = 0.2,
+    data = data.frame(
+      Date_Time = as.POSIXct(NA),
+      Count = Inf,
+      xmin = as.POSIXct(
+        c("2015-04-05 02:00", "2015-10-04 02:00"),
+        tz = "UTC"
+      ),
+      xmax = as.POSIXct(
+        c("2015-04-05 03:00", "2015-10-04 04:00"),
+        tz = "UTC"
+      ),
+      Date = as.Date(c("2015-04-05", "2015-10-04"))
+    )
+  )
+```
+
+If you want to see the absolute time values instead, you can use `position_time_absolute()`.
+```{r}
+pedestrian |>
+  filter(
+    Sensor == "Southern Cross Station",
+    Date %in% as.Date(c("2015-04-05", "2015-10-04"))
+  ) |>
+  ggplot(aes(x = Date_Time, y = Count)) +
+  geom_time_line(position = position_time_absolute()) +
+  geom_point(position = position_time_absolute()) +
+  facet_grid(
+    cols = vars(Date),
+    scales = "free_x",
+    labeller = labeller(
+      Date = c(
+        "2015-04-05" = "2015-04-05\n(DST ends)",
+        "2015-10-04" = "2015-10-04\n(DST begins)"
+      )
+    )
+  ) +
+  scale_x_datetime(date_labels = "%H:%M")
+```
+
+<!-- Daily -->
+
+Differences in timezones are also relevant for precisely positioning daily data. Consider pedestrian counts in Melbourne (timezone Australia/Melbourne) and in London (timezone Europe/London). The data is collected over the same dates, but the local time of day is different due to the timezone difference. The ggtime package positions dates in civil time by default (matching ggplot2), but the relative position of dates in different timezones can be shown with `position_time_absolute()`.
+
+Note: storing timezone information with dates requires the mixtime package, which is currently in development. The example below uses a helper function `force_tzs()` to add timezone information to `Date` dates for demonstration purposes.
+
+```{r}
+#| fig-height: 8
+#| code-fold: true
+MEL_LDN_mockdata <- pedestrian |>
+  filter(
+    between(Date, ymd("2015-03-05"), ymd("2015-03-11")),
+    Sensor %in% c("Bourke Street Mall (North)", "QV Market-Elizabeth St (West)")
+  ) |>
+  index_by(Date) |>
+  group_by(Sensor) |>
+  summarise(Count = sum(Count)) |>
+  as_tibble() |>
+  mutate(
+    Sensor = factor(
+      Sensor,
+      levels = c("Bourke Street Mall (North)", "QV Market-Elizabeth St (West)"),
+      labels = c("Melbourne", "London")
+    ),
+    Count = case_when(Sensor == "London" ~ Count * 1.75, TRUE ~ Count),
+    Date = as.POSIXct(Date, tz = "UTC")
+  ) |>
+  as_tsibble(index = Date, key = Sensor, regular = FALSE)
+daily_civil <- MEL_LDN_mockdata |>
+  ggplot(aes(x = Date, y = Count, colour = Sensor, shape = Sensor)) +
+  geom_line() +
+  geom_point(size = 3) +
+  labs(title = "Civil time")
+daily_absolute <- MEL_LDN_mockdata |>
+  mutate(
+    Date = force_tzs(
+      Date,
+      tzones = case_match(
+        Sensor,
+        "Melbourne" ~ "Australia/Melbourne",
+        "London" ~ "Europe/London"
+      )
+    )
+  ) |>
+  ggplot(aes(x = Date, y = Count, colour = Sensor, shape = Sensor)) +
+  geom_line() +
+  geom_point(size = 3) +
+  labs(title = "Absolute time (UTC)")
+
+
+((daily_civil + guides(colour = "none", shape = "none")) / daily_absolute) &
+  plot_layout(guides = "collect", axes = "collect") &
+  scale_x_datetime(date_breaks = "1 day", date_labels = "%b %d") &
+  geom_vline(
+    xintercept = as.POSIXct("2015-03-08", tz = "UTC"),
+    linetype = "dashed"
+  ) &
+  labs(y = NULL) &
+  theme(legend.position = "bottom")
+```
+
+<!-- TODO: Why aren't the x-axis scales aligned in patchwork? -->
 
 ## Cyclical time looping
 
