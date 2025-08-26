@@ -621,7 +621,7 @@ wrap_plots(implicit_na_before, implicit_na_after, ncol = 2, axes = "collect") +
 ggtime is designed to work well with other extension packages, especially those that enable plotting of other semantic variables such as ggdist for visualising distributions.
 
 ```{r}
-#| label: ggtime-ggdist
+#| label: ggtime-ggdist-pedestrian
 #| message: false
 library(fable)
 ped_train <- pedestrian |> 
@@ -638,6 +638,24 @@ ped_train |>
   ) |> 
   forecast(h = "4 weeks") |>
   autoplot(ped_train)
+```
+
+```{r}
+#| label: ggtime-ggdist-uad
+#| message: false
+library(fable)
+library(ggplot2)
+uad <- as_tsibble(USAccDeaths)
+uad |> 
+  model(ARIMA(value)) |>
+  forecast(h = "2 years") |>
+  autoplot(uad) +
+  labs(
+    title = "Forecast of US accidental deaths",
+    y = "Number of deaths",
+    x = "Year"
+  ) + 
+  theme(legend.position = c(0.06,0.9))
 ```
 
 ## Temporal resolution / aggregation
