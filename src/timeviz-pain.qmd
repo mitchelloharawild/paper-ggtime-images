@@ -1,0 +1,569 @@
+---
+title: Problematic nuggets
+format: 
+  html: default
+  # revealjs:
+  #   scrollable: true
+  #   toc: true     # this adds a TOC slide at the beginning
+execute:
+  cache: true
+  echo: true
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| echo: true
+library(ggplot2)
+library(tsibbledata)
+library(dplyr)
+library(lubridate)
+library(tsibble)
+library(ggtime)
+theme_set(theme_minimal())
+
+
+knitr::knit_hooks$set(plot = function(x, options) {
+  # x: the default plot file path (knitr saves the plot here)
+  # options: chunk options, includes label, fig.num, etc.
+  # We'll copy/sync the plot to "plots" using ggsave
+
+  # Display the plot in the final document
+  out <- knitr::hook_plot_md(x, options)
+    
+  # Compute a name for the saved file
+  label <- options$label
+  fig.num <- options$fig.num %||% 1
+  fig.cur <- options$fig.cur %||% 1
+  fig.width <- options$fig.width %||% 12
+  fig.height <- options$fig.height %||% 8
+  ext <- tools::file_ext(x)
+  # New filename, e.g. plots/my-label-1.png
+  plot_file <- sprintf("../plots/plot-%s-%ix%i-%d.%s", label, fig.width, fig.height, fig.cur, ext)
+
+  # Copy the image to the plots/ path
+  file.copy(x, plot_file, overwrite = TRUE)
+  
+
+  sprintf('<a href="%s" download><span title="Click to download">%s</span></a>', plot_file, out)
+})
+```
+
+<!-- TODO: Make into full sections, along with demonstration of how it is solved in ggtime.
+- problem definition
+- illustration
+- ggtime solution -->
+
+## Inaccurate DST slopes
+<!-- * inaccurate slopes with DST (sub-daily but also technically daily and above) -->
+
+When plotting data with daylight saving time (DST) transitions, the slopes of the lines can become inaccurate. This is particularly evident when plotting sub-daily data that crosses a DST boundary, but also has a slight effect on daily and higher frequency data. The issue arises because the temporal duration / mass is not consistent despite the visual representation using equal spacing.
+
+```{r}
+tz_shift <- as_tibble(tsibbledata::gafa_stock) |>
+  filter(
+    (Symbol == "AAPL" & Date <= "2014-01-15") | 
+      (Symbol == "GOOG" & Date <= "2014-01-13")
+  ) |>
+  mutate(Date = Sys.Date() + hours(c(1:3, 3:9, 1:2, 4:9)), DST = ifelse(Symbol == "AAPL", "DST Ends", "DST Begins")) |> 
+  slice(1:3, 3:12, 12:n()) |> 
+  mutate(
+    open = duplicated(Open),
+    closed = c(open[-1], FALSE),
+    Date = Date + open*3600*((DST=="DST Begins")*2-1)
+  ) 
+```
+
+Naively plotting civil-time data without any special handling of DST results in misleading slopes. When DST ends, a saw-tooth appears where the time pre/post DST is identical. When DST begins, the slope is half what is appropriate since the despite only 1 hour passing the civil time has moved forward by 2 hours.
+
+```{r}
+#| label: civil-dst-naive
+tz_shift |> 
+  ggplot(aes(x = Date, y = Close)) + 
+  geom_path(data = filter(tz_shift, !open), colour = "steelblue") +
+  facet_wrap(vars(DST), ncol = 2, scales = "free_y") + 
+  scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 1)) + 
+  guides(shape = "none")
+```
+
+<!-- TODO: always show civil time as AM/PM and absolute time as 24h time -->
+
+Using `geom_time_line()` explicitly handles the DST transitions with dashed lines when the `xtimeoffset` changes, and so the solid line slopes accurately reflect the actual time passed.
+
+```{r}
+#| label: civil-dst-ggtime
+tz_shift |> 
+  ggplot(aes(x = Date, y = Close)) + 
+  geom_path(aes(group = cumsum(open))) + 
+  geom_path(linetype = "dashed", data = filter(tz_shift, open | closed)) +
+  facet_wrap(vars(DST), ncol = 2, scales = "free_y") + 
+  scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 1)) + 
+  guides(shape = "none")
+```
+
+Comparing the two lines:
+
+```{r}
+#| label: civil-dst-compare
+tz_shift |> 
+  ggplot(aes(x = Date, y = Close)) + 
+  geom_path(aes(group = cumsum(open))) + 
+  geom_path(linetype = "dashed", data = filter(tz_shift, open | closed)) +
+  geom_path(data = filter(tz_shift, !open), colour = "steelblue") +
+  facet_wrap(vars(DST), ncol = 2, scales = "free_y") + 
+  scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 1)) + 
+  guides(shape = "none")
+```
+
+
+Note: slopes and other mathematics on time should always be done using absolute time, not civil time. This is because civil time does not accurately represent the temporal mass of the data, and so any calculations on civil time can produce misleading results.
+
+## Temporal resolution (for continuous time viz)
+<!-- * Continuous visualisation with different resolutions -->
+
+When plotting time series, the resolution of the time axis determines how much detail is shown. Modern time series data from automated systems are recorded at higher frequencies than what can feasilby be visualised, and so it is common to pre-aggregate the data over time.
+
+Below is half-hourly demand data for Victoria, Australia. When directly plotted, the data appears too dense to be useful. The annual patterns are less visible since the intra-day and intra-week variations dominate the visualisation.
+
+```{r}
+#| label: vic-elec-raw
+vic_elec |> 
+  ggplot(aes(x = Time, y = Demand)) + 
+  geom_line() + 
+  labs(x = "Time", y = "Demand (MW)")
+```
+
+Instead aggregating the data to daily values more clearly shows the presence of a weekly seasonal pattern. The intra-week variations are still visible, making the annual patterns still difficult to discern.
+
+```{r}
+#| label: vic-elec-daily
+vic_elec |> 
+  index_by(Date) |>
+  summarise(Demand = sum(Demand)) |>
+  ggplot(aes(x = Date, y = Demand)) + 
+  geom_line() + 
+  labs(x = "Time", y = "Demand (MW)")
+```
+
+Aggregating the data to weekly removes all intra-week variation, making the annual seasonal patterns and overall trend more visible.
+
+```{r}
+#| label: vic-elec-weekly
+vic_elec |> 
+  index_by(Week = yearweek(Time)) |>
+  summarise(Demand = sum(Demand)) |>
+  ggplot(aes(x = Week, y = Demand)) + 
+  geom_line() + 
+  labs(x = "Time", y = "Demand (MW)")
+```
+
+## Partial temporal aggregation
+
+Temporal aggregation in this way also requires care not to produce incomplete aggregation. The first and last weeks of this aggregation are incomplete (adding only 2-3 days of a week), making notable drops in the data.
+
+```{r}
+#| label: vic-elec-weekly-incomplete
+vic_elec |> 
+  index_by(Week = yearweek(Time)) |>
+  summarise(Demand = sum(Demand)) |>
+  # Removing incomplete aggregation weeks by row.
+  slice(-1, -n()) |>
+  ggplot(aes(x = Week, y = Demand)) + 
+  geom_line() + 
+  labs(x = "Time", y = "Demand (MW)")
+```
+
+A boolean function in mixtime would be useful to identify complete/incomplete nesting of time. It would require as inputs both the aggregated and disaggregated time points (and their respective calendar attributes), for example: `mixtime::temporally_complete(<agg>, <disagg>)`.
+
+Alternatively, the aggregation process could be brought into the grammar as a stat. However in this case I think it is better to keep aggregation as a pre-processing step (since there are many ways to aggregate time data).
+
+## Temporal resolution (for cyclical time viz)
+<!-- * Cyclical/Seasonal visualisation with different resolutions -->
+
+High temporal resolution also presents a challenge for visualising cyclical time data. For the same reasons as continuous time plotting, the cyclical plots can be too dense to clearly show seasonal patterns.
+
+Showing the annual pattern with a 30-minute temporal resolution is too dense to clearly show the annual shape (since intra-day and intra-week variations produce excessive ink on the page).
+
+```{r}
+#| label: vic-elec-seasonal-raw
+vic_elec |> 
+  gg_season(period = "year")
+```
+
+Aggregating the data to weekly removes all intra-day and intra-week variations, making the annual seasonal patterns more visible.
+
+```{r}
+#| label: vic-elec-seasonal-weekly
+vic_elec |> 
+  index_by(Week = yearweek(Time)) |>
+  summarise(Demand = sum(Demand)) |>
+  # Removing incomplete aggregation weeks by row
+  slice(-1, -n()) |> 
+  gg_season(period = "year")
+```
+
+The same applies to showing weekly patterns, where the intra-day variation distracts from the weekly seasonal pattern.
+
+```{r}
+#| label: vic-elec-seasonal-week
+vic_elec |> 
+  gg_season(period = "week")
+```
+
+Removing intra-day variation by aggregating the data to daily values makes the weekly seasonal patterns more visible.
+
+```{r}
+#| label: vic-elec-seasonal-daily
+vic_elec |> 
+  index_by(Date = date(Time)) |>
+  summarise(Demand = sum(Demand)) |>
+  gg_season(period = "week")
+```
+
+<!-- TODO: Add shading for the weekend days to show the interaction between daily and weekly seasonal patterns. -->
+<!-- TODO: Also suffer. The Sunday should link to Monday, and the granularity alignment of days should map down to moments (center aligned). -->
+
+
+Note that in this case, the daily and weekly seasonal patterns interact. The shape of the daily pattern changes from weekdays to weekends, and so there is merit in showing weekly seasonality with sub-daily resolution for this data... however this combination is specifically useful to show the interaction effect.
+
+Combining this type of viz with facetting (much like seasonal sub-series plots) can also be useful to show the interaction between daily and weekly seasonal patterns.
+
+```{r}
+#| label: vic-elec-seasonal-daily-facet
+vic_elec |> 
+  gg_season(period = "day", facet_period = "week")
+```
+
+## Timezones in non-sub-daily data
+<!-- * Alignment of aggregate times that vary with timezones (e.g. showing same day but different timezones) -->
+
+<!-- * Positioning of timezoned daily data should be different in civil and absolute time. Civil time will behave as it is usually plotted, but absolute time should account fo the timezone offset between all the date timezones. -->
+
+Timezones are almost exclusively attached to datetime/POSIXct time classes, although they are still relevant for daily/weekly/monthly/yearly data.
+
+In absolute time, the timing of a day in Australia can be very different to the timing of a day in the UK. With mixtime allowing a timezone to be attached to time of any granularity, it makes sense to plot the same day in different timezones with a different position.
+
+This is analogous to plotting time in civil/absolute time. Date are seemingly always plotted in civil time (where the date is positioned in the same place regardless of timezone), while datetimes are seemingly always plotted in absolute time (to avoid the visual challenges of timezone changes).
+
+Mapping aggregated timezoned dates to timezoned datetimes using center alignment (respecting temporal mass) will produce a different 'center' position of the same day for each timezone.
+
+
+Here is how daily data from Melbourne and London are usually shown (civil time):
+
+```{r}
+#| label: timezone-daily-civil-mellon
+pedestrian |> 
+  filter(
+    between(Date, ymd("2015-03-02"), ymd("2015-03-12")),
+    Sensor %in% c("Bourke Street Mall (North)", "QV Market-Elizabeth St (West)")
+  ) |> 
+  index_by(Date) |>
+  group_by(Sensor) |>
+  summarise(Count = sum(Count)) |>
+  mutate(
+    Sensor = factor(Sensor, levels = c("Bourke Street Mall (North)", "QV Market-Elizabeth St (West)"), labels = c("Melbourne", "London")),
+  ) |> 
+  autoplot(Count) + 
+  geom_point()
+```
+
+However since a day in Melbourne (UTC+10) starts and ends 9 hours earlier than a day in London (UTC+1), the same day in Melbourne *should be* positioned 9 hours earlier than the same day in London when plotted in absolute time.
+
+```{r}
+#| label: timezone-daily-absolute-mellon
+pedestrian |> 
+  filter(
+    between(Date, ymd("2015-03-02"), ymd("2015-03-12")),
+    Sensor %in% c("Bourke Street Mall (North)", "QV Market-Elizabeth St (West)")
+  ) |> 
+  index_by(Date) |>
+  group_by(Sensor) |>
+  summarise(Count = sum(Count)) |>
+  mutate(
+    Sensor = factor(Sensor, levels = c("Bourke Street Mall (North)", "QV Market-Elizabeth St (West)"), labels = c("Melbourne", "London")),
+    Date = force_tzs(
+      as.POSIXct(Date), 
+      tzones = case_match(Sensor, 
+        "Melbourne" ~ "Australia/Melbourne", 
+        "London" ~ "Europe/London"
+      )
+    )
+  ) |> 
+  autoplot(Count) + 
+  geom_point()
+```
+
+By default, ggtime shows data in civil time and so the position of daily data in different timezones is the same (and matching user's expectations). However if the time scale maps data into a sub-daily granularity and absolute time is used, then the position of the daily data will be adjusted to account for the timezone offset.
+
+<!-- TODO: Change x-scale to be referenced in UTC time and draw vline dashed annotations for start/end dates in UTC time. -->
+
+## Aligning temporal aggregates
+<!-- * Alignment of aggregate times that vary with timezones shown with step geom or centered point (as opposed to left-aligned which seems to be standard based on data support/lackthereof) -->
+
+When plotting aggregated time data, it is common to align the time points to the left of the aggregation period. This is in-part due to the lack of support for time measured with granularities other than daily or secondly in the underlying data structures. These data structure limitations make it common for monthly data (and minutely, hourly, weekly, etc.) to be stored using the first moment within that granularity (e.g. day 01 for monthly data, or 00:00 for hourly data).
+
+Although left alignment is the most common, it is not the only (nor best) way to align time data. Temporal aggregates shown on more granular time scales are best shown using a time interval from the first moment to the last moment of the aggregation period. This can be shown using a step geometry.
+
+Take for example pedestrian counts, which have been aggregated from the hourly totals to give daily averages of hourly counts (usually this is `sum()` not `mean()`, but averages are used for comparable scales).
+
+```{r}
+#| label: timezone-daily-step
+ped_global <- pedestrian |> 
+  filter(
+    between(Date, ymd("2015-03-02"), ymd("2015-03-12")),
+    Sensor %in% c("Bourke Street Mall (North)", "QV Market-Elizabeth St (West)")
+  ) |> 
+  mutate(
+    Sensor = factor(Sensor, levels = c("Bourke Street Mall (North)", "QV Market-Elizabeth St (West)"), labels = c("Melbourne", "London"))
+  )
+ped_global |> 
+  index_by(Date) |>
+  group_by(Sensor) |>
+  summarise(Count = mean(Count)) |>
+  ggplot(aes(x = as.POSIXct(Date), y = Count, colour = Sensor)) + 
+  geom_line(aes(x = Date_Time), data = as_tibble(ped_global) |> mutate(Date_Time = force_tz(Date_Time, "UTC"))) +
+  geom_step() + 
+  geom_point()
+```
+
+The plot uses POSIXct (ymdhms) to represent the time dimension, and so the daily aggregate point geoms are shown using the first moment of the day (h:m:s 00:00:00). The step geom shows the full time interval of the day, from 00:00:00 to 23:59:59. This is more appropriate than left-aligning the daily data, since it visually represents the full time period of the day.
+
+While being a more accurate portrayal of the data and it's transformation/aggregation, steps are sub-optimal for showing the slopes between time points. To draw sloped lines that show the rate of change over some temporal duration, a specific position for a day on the POSIXct time scale is needed. While the first moment of the day is a common choice, any value along the step (`time_align = <0-1>`) is appropriate. We argue that the center (`time_align = 0.5`) is the best choice.
+
+```{r}
+#| label: timezone-daily-step-center
+ped_global |> 
+  index_by(Date) |>
+  group_by(Sensor) |>
+  summarise(Count = mean(Count)) |>
+  ggplot(aes(x = as.POSIXct(Date), y = Count, colour = Sensor)) + 
+  geom_line(aes(x = Date_Time), data = as_tibble(ped_global) |> mutate(Date_Time = force_tz(Date_Time, "UTC"))) +
+  geom_step() + 
+  geom_point(aes(x = as.POSIXct(Date) + hours(12)))
+```
+
+<!-- * NYT example of annual time frequency with daily annotation presenting alignment inaccuracies. <https://www.nytimes.com/2025/05/24/us/police-killings-george-floyd.html> -->
+
+More care when considering the time alignment of aggregated time data will produce more accurate visualisations. As an example of how showing multiple temporal granularities (with left aligned points/lines) can be misleading, refer to the NYT visualisation of annual time series data annotated with a one-day event: <https://www.nytimes.com/2025/05/24/us/police-killings-george-floyd.html>.
+
+![NYT visualisation on 24 May 2025 archived <https://archive.is/0WHQT>](resources/nyt-floyd-old.png)
+
+In this chart the annual time points are shown with daily points aligned with the start of each year, making the annotation for 25 May 2020 (the day George Floyd was killed) appear after the point showing 2020 homicide and police killings. This is misleading since the daily annotation intercepts the annual lines at a value higher than what is accurate for that time in 2020 (since there is an upward slope toward 2021). Assuming linearity between the annual points, the correct comparison value for 25 May 2020 is somewhere between the values for 2019 and 2020 (slightly lower than the 2020 point). Center alignment of the daily annotation would show the value for 25 May 2020 as being lower than the 2020 point, more accurately reflecting a smooth/linear 'annual' value for that day.
+
+A revised visualisation for this article was published, removing the misleading annotation avoiding the conflict between showing different temporal granularities.
+
+![Revised NYT visualisation on 13 July 2025 archived <https://archive.is/MjDXP>](resources/nyt-floyd-new.png)
+
+<!-- TODO: Create a panel of alternative viz for this data, one with steps another with left align (as per original figure) and finally center alignment. Show how the center alignment is more accurate for the daily annotation. -->
+
+
+## Cyclical time visualisation
+
+This is just hard to do in ggplot2, and so it is rarely done without plot helpers like `gg_season()`.
+
+Take for example a time plot of the monthly accidental deaths in the USA.
+
+```{r}
+#| label: uad-time
+uad <- as_tsibble(USAccDeaths) |> 
+  as_tibble() |> 
+  mutate(index = as.Date(index))
+uad |>
+  ggplot(aes(x = index, y = value)) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths")
+```
+
+The easiest way in ggplot2 to visualise seasons is with facetting.
+
+```{r}
+#| label: uad-facet
+uad |> 
+  ggplot(aes(x = as.Date(index), y = value)) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths") +
+  facet_grid(cols = vars(month(index, label = TRUE)))
+```
+
+This plot (a seasonal sub-series plot) is most useful for showing changes in a seasonal pattern over time. It does not work very well when there are many values in each season (e.g. 24 hours in a day is 24 facets, hourly data with weekly seasonality is 168 facets, etc.).
+
+Instead, cyclical time visualisation is often done by showing the time dimension cyclically (not continuously). This currently requires data pre-processing to extract circular time component(s) from time points.
+
+```{r}
+#| label: uad-sawtooth-pain
+uad |> 
+  ggplot(aes(x = month(index), y = value)) +
+  geom_line() +
+  geom_point(aes(colour = year(index))) +
+  labs(x = "Month", y = "Deaths")
+```
+
+The continuous component of time also needs to be managed in order to avoid sawtooth patterns across time.
+
+```{r}
+#| label: uad-fct-season-pain
+uad |> 
+  ggplot(aes(x = month(index), y = value, group = year(index))) +
+  geom_line() +
+  geom_point(aes(colour = year(index))) +
+  geom_vline(
+    xintercept = c(1, 12),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  labs(x = "Month", y = "Deaths")
+```
+
+Even still, this plot is not completely accurate since the month of December is not connected to January of the following year. The data-preprocessing step has lost this continuity in the data between December and January, and so this connection is difficult to show even with additional work (essentially a lot more data pre-processing).
+
+Instead, the cyclical component of time can be shown using a looped coordinate system. This coordinate space uses continuous time with loop points, retaining the connection between seasons while also eliminating the need to separately manage the circular and continuous components of time.
+
+```{r}
+#| label: uad-loop-pain
+uad |> 
+  ggplot(aes(x=index, y=value)) +
+  geom_line() +
+  geom_vline(
+    xintercept = c(1, 365-30),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  coord_loop(time_loop = "1 year", expand = FALSE)
+```
+
+<!-- TODO: Add vline reference lines to visually indicate the differences between this and the usual/previous graphic -->
+
+<!-- TODO: Also extend this to comparisons in polar coordinates -->
+
+## Disconnection in circular coordinate spaces
+<!-- * Not completing the polar coordinates circle since graphically dec->jan, but semantically it does. -->
+
+This disconnection in the cyclical component of time when using data-preprocessing is also present in polar coordinates.
+
+```{r}
+#| label: uad-fct-polar-pain
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = month(index), y = value, group = year(index))) +
+  geom_line() +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") 
+```
+
+In this case both Jan and Dec are shown in the same position at the top of the polar plot, with no connection between them. The common data pre-processing solution to this (e.g. ggperiodic) is to add a quasi-point at 359.9999 degrees to connect the two values.
+
+An alternative approach is to discretise the time dimension with labels:
+
+```{r}
+#| label: uad-fct-polar-label
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = month(index, label = TRUE), y = value, group = year(index))) +
+  geom_line() +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") 
+```
+
+Now Dec/Jan do not share the same position, but they are still not connected (and it is programmatically difficult to connect them). Another problem with discretisation of time in this way is that the temporal distance between months is no longer respected (e.g. Jan is 31 days, Feb is 28/29 days, etc.), making the plot less precise.
+
+The looped coordinate space exists as a coordinate space transformation, and so the inner coordinate space (usually cartesian) can be swapped out with a polar coordinate space. Much like before in cartesian coordiantes, this would allow continuous time to be plotted in polar coordinates with loops over each season.
+
+```{r}
+#| eval: false
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = index, y = value)) +
+  geom_line() +
+  coord_loop(time_loop = "1 year", coord = coord_polar()) +
+  labs(x = "Month", y = "Deaths") 
+```
+
+This currently doesn't work in `coord_loop` (please @mjskay 🙏), but the equivalent can be achieved (ab)using the periodic nature of polar coordinates with out-of-bounds values on the time scale.
+
+```{r}
+#| label: uad-loop-polar-pain
+month0 = min(uad$index)
+uad |>
+  ggplot(aes(x = index, y = value)) +
+  geom_line() +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") +
+  scale_x_date(
+    limits = month0 + months(c(0, 12)),
+    oob = scales::oob_keep,
+    breaks = month0 + months(0:11),
+    date_labels = "%b"
+  )
+```
+
+## Unordered discretisation of cyclical time
+
+Converting cyclical time into labels converts cyclical values (that naturally loop) into discrete values. If the ordering of the cyclical values is not preserved, then the plot's seasons can easily be mis-ordered.
+
+Using `strftime()` to convert cyclical time into labels does not preserve the ordering of the cyclical values, and is tempting for many to use since it avoids the added dependency on lubridate.
+
+With lubridate (correctly ordered cyclical time points):
+
+```{r}
+#| label: uad-fct-facet-pain
+uad |> 
+  ggplot(aes(x = as.Date(index), y = value)) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths") +
+  facet_grid(cols = vars(month(index, label = TRUE)))
+```
+
+With `strftime()` (not ordered cyclical time points, instead using lexical ordering):
+
+```{r}
+#| label: uad-chr-facet-pain
+uad |> 
+  ggplot(aes(x = as.Date(index), y = value)) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths") +
+  facet_grid(cols = vars(strftime(index, format = "%b")))
+```
+
+Also applies to x-axis for cyclical time visualisation. The ordering of the months is not preserved, and so the plot does not show the correct seasonal pattern.
+
+```{r}
+#| label: uad-chr-season-pain
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = strftime(index, format = "%b"), y = value, group = year(index))) +
+  geom_line() +
+  labs(x = "Month", y = "Deaths") 
+```
+
+```{r}
+#| label: uad-chr-polar-pain
+as_tsibble(USAccDeaths) |>
+  ggplot(aes(x = strftime(index, format = "%b"), y = value, group = year(index))) +
+  geom_line() +
+  coord_polar() +
+  labs(x = "Month", y = "Deaths") 
+```
+
+## Implicit missing temporal values are dropped
+
+Implicit missing values in time series data are drawn together with lines when (explicit) missing values in ggplot2 are removed. 
+
+```{r}
+#| label: bank-calls-gaps-ggplot2-pain
+fpp3::bank_calls |> 
+  filter(DateTime < ymd_hms("2003-03-20 00:00:00")) |>
+  ggplot(aes(x = DateTime, y = Calls)) +
+  geom_line() + 
+  scale_x_datetime(
+    breaks = "6 hours",
+    date_labels = "%m %d %H:%M"
+  )
+```
+
+In ggtime `geom_time_line()` draws implicit missing values as gaps in the line, more accurately indicating the gaps in the time series.
+
+
+```{r}
+#| label: bank-calls-gaps-ggtime-pain
+fpp3::bank_calls |> 
+  filter(DateTime < ymd_hms("2003-03-20 00:00:00")) |>
+  fill_gaps() |> 
+  ggplot(aes(x = DateTime, y = Calls)) +
+  geom_line()
+```

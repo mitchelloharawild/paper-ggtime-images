@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Problematic nuggets</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="timeviz-pain_files/libs/clipboard/clipboard.min.js"></script>
+<script src="timeviz-pain_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="timeviz-pain_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="timeviz-pain_files/libs/quarto-html/popper.min.js"></script>
+<script src="timeviz-pain_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="timeviz-pain_files/libs/quarto-html/anchor.min.js"></script>
+<link href="timeviz-pain_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="timeviz-pain_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="timeviz-pain_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="timeviz-pain_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="timeviz-pain_files/libs/bootstrap/bootstrap-7312c3b9038fe3ac2ea903761c11e951.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Problematic nuggets</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- TODO: Make into full sections, along with demonstration of how it is solved in ggtime.
+- problem definition
+- illustration
+- ggtime solution -->
+<section id="inaccurate-dst-slopes" class="level2">
+<h2 class="anchored" data-anchor-id="inaccurate-dst-slopes">Inaccurate DST slopes</h2>
+<!-- * inaccurate slopes with DST (sub-daily but also technically daily and above) -->
+<p>When plotting data with daylight saving time (DST) transitions, the slopes of the lines can become inaccurate. This is particularly evident when plotting sub-daily data that crosses a DST boundary, but also has a slight effect on daily and higher frequency data. The issue arises because the temporal duration / mass is not consistent despite the visual representation using equal spacing.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>tz_shift <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(tsibbledata<span class="sc">::</span>gafa_stock) <span class="sc">|&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    (Symbol <span class="sc">==</span> <span class="st">"AAPL"</span> <span class="sc">&amp;</span> Date <span class="sc">&lt;=</span> <span class="st">"2014-01-15"</span>) <span class="sc">|</span> </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      (Symbol <span class="sc">==</span> <span class="st">"GOOG"</span> <span class="sc">&amp;</span> Date <span class="sc">&lt;=</span> <span class="st">"2014-01-13"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Date =</span> <span class="fu">Sys.Date</span>() <span class="sc">+</span> <span class="fu">hours</span>(<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="dv">3</span><span class="sc">:</span><span class="dv">9</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="dv">4</span><span class="sc">:</span><span class="dv">9</span>)), <span class="at">DST =</span> <span class="fu">ifelse</span>(Symbol <span class="sc">==</span> <span class="st">"AAPL"</span>, <span class="st">"DST Ends"</span>, <span class="st">"DST Begins"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="dv">3</span><span class="sc">:</span><span class="dv">12</span>, <span class="dv">12</span><span class="sc">:</span><span class="fu">n</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">open =</span> <span class="fu">duplicated</span>(Open),</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">closed =</span> <span class="fu">c</span>(open[<span class="sc">-</span><span class="dv">1</span>], <span class="cn">FALSE</span>),</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">Date =</span> Date <span class="sc">+</span> open<span class="sc">*</span><span class="dv">3600</span><span class="sc">*</span>((DST<span class="sc">==</span><span class="st">"DST Begins"</span>)<span class="sc">*</span><span class="dv">2-1</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  ) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Naively plotting civil-time data without any special handling of DST results in misleading slopes. When DST ends, a saw-tooth appears where the time pre/post DST is identical. When DST begins, the slope is half what is appropriate since the despite only 1 hour passing the civil time has moved forward by 2 hours.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tz_shift <span class="sc">|&gt;</span> </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Date, <span class="at">y =</span> Close)) <span class="sc">+</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">data =</span> <span class="fu">filter</span>(tz_shift, <span class="sc">!</span>open), <span class="at">colour =</span> <span class="st">"steelblue"</span>) <span class="sc">+</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="fu">vars</span>(DST), <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span> </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_shape_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"TRUE"</span> <span class="ot">=</span> <span class="dv">16</span>, <span class="st">"FALSE"</span> <span class="ot">=</span> <span class="dv">1</span>)) <span class="sc">+</span> </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">shape =</span> <span class="st">"none"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-civil-dst-naive-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/civil-dst-naive-1.png" width="672"></span></a></p>
+</div>
+<!-- TODO: always show civil time as AM/PM and absolute time as 24h time -->
+<p>Using <code>geom_time_line()</code> explicitly handles the DST transitions with dashed lines when the <code>xtimeoffset</code> changes, and so the solid line slopes accurately reflect the actual time passed.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>tz_shift <span class="sc">|&gt;</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Date, <span class="at">y =</span> Close)) <span class="sc">+</span> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="fu">aes</span>(<span class="at">group =</span> <span class="fu">cumsum</span>(open))) <span class="sc">+</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">data =</span> <span class="fu">filter</span>(tz_shift, open <span class="sc">|</span> closed)) <span class="sc">+</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="fu">vars</span>(DST), <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span> </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_shape_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"TRUE"</span> <span class="ot">=</span> <span class="dv">16</span>, <span class="st">"FALSE"</span> <span class="ot">=</span> <span class="dv">1</span>)) <span class="sc">+</span> </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">shape =</span> <span class="st">"none"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-civil-dst-ggtime-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/civil-dst-ggtime-1.png" width="672"></span></a></p>
+</div>
+<p>Comparing the two lines:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tz_shift <span class="sc">|&gt;</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Date, <span class="at">y =</span> Close)) <span class="sc">+</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="fu">aes</span>(<span class="at">group =</span> <span class="fu">cumsum</span>(open))) <span class="sc">+</span> </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">data =</span> <span class="fu">filter</span>(tz_shift, open <span class="sc">|</span> closed)) <span class="sc">+</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">data =</span> <span class="fu">filter</span>(tz_shift, <span class="sc">!</span>open), <span class="at">colour =</span> <span class="st">"steelblue"</span>) <span class="sc">+</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="fu">vars</span>(DST), <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span> </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_shape_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"TRUE"</span> <span class="ot">=</span> <span class="dv">16</span>, <span class="st">"FALSE"</span> <span class="ot">=</span> <span class="dv">1</span>)) <span class="sc">+</span> </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">shape =</span> <span class="st">"none"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-civil-dst-compare-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/civil-dst-compare-1.png" width="672"></span></a></p>
+</div>
+<p>Note: slopes and other mathematics on time should always be done using absolute time, not civil time. This is because civil time does not accurately represent the temporal mass of the data, and so any calculations on civil time can produce misleading results.</p>
+</section>
+<section id="temporal-resolution-for-continuous-time-viz" class="level2">
+<h2 class="anchored" data-anchor-id="temporal-resolution-for-continuous-time-viz">Temporal resolution (for continuous time viz)</h2>
+<!-- * Continuous visualisation with different resolutions -->
+<p>When plotting time series, the resolution of the time axis determines how much detail is shown. Modern time series data from automated systems are recorded at higher frequencies than what can feasilby be visualised, and so it is common to pre-aggregate the data over time.</p>
+<p>Below is half-hourly demand data for Victoria, Australia. When directly plotted, the data appears too dense to be useful. The annual patterns are less visible since the intra-day and intra-week variations dominate the visualisation.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>vic_elec <span class="sc">|&gt;</span> </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Time, <span class="at">y =</span> Demand)) <span class="sc">+</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Time"</span>, <span class="at">y =</span> <span class="st">"Demand (MW)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-vic-elec-raw-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/vic-elec-raw-1.png" width="672"></span></a></p>
+</div>
+<p>Instead aggregating the data to daily values more clearly shows the presence of a weekly seasonal pattern. The intra-week variations are still visible, making the annual patterns still difficult to discern.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>vic_elec <span class="sc">|&gt;</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">index_by</span>(Date) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Demand =</span> <span class="fu">sum</span>(Demand)) <span class="sc">|&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Date, <span class="at">y =</span> Demand)) <span class="sc">+</span> </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Time"</span>, <span class="at">y =</span> <span class="st">"Demand (MW)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-vic-elec-daily-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/vic-elec-daily-1.png" width="672"></span></a></p>
+</div>
+<p>Aggregating the data to weekly removes all intra-week variation, making the annual seasonal patterns and overall trend more visible.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>vic_elec <span class="sc">|&gt;</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">index_by</span>(<span class="at">Week =</span> <span class="fu">yearweek</span>(Time)) <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Demand =</span> <span class="fu">sum</span>(Demand)) <span class="sc">|&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Week, <span class="at">y =</span> Demand)) <span class="sc">+</span> </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Time"</span>, <span class="at">y =</span> <span class="st">"Demand (MW)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-vic-elec-weekly-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/vic-elec-weekly-1.png" width="672"></span></a></p>
+</div>
+</section>
+<section id="partial-temporal-aggregation" class="level2">
+<h2 class="anchored" data-anchor-id="partial-temporal-aggregation">Partial temporal aggregation</h2>
+<p>Temporal aggregation in this way also requires care not to produce incomplete aggregation. The first and last weeks of this aggregation are incomplete (adding only 2-3 days of a week), making notable drops in the data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>vic_elec <span class="sc">|&gt;</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">index_by</span>(<span class="at">Week =</span> <span class="fu">yearweek</span>(Time)) <span class="sc">|&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Demand =</span> <span class="fu">sum</span>(Demand)) <span class="sc">|&gt;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Removing incomplete aggregation weeks by row.</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="sc">-</span><span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Week, <span class="at">y =</span> Demand)) <span class="sc">+</span> </span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Time"</span>, <span class="at">y =</span> <span class="st">"Demand (MW)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-vic-elec-weekly-incomplete-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/vic-elec-weekly-incomplete-1.png" width="672"></span></a></p>
+</div>
+<p>A boolean function in mixtime would be useful to identify complete/incomplete nesting of time. It would require as inputs both the aggregated and disaggregated time points (and their respective calendar attributes), for example: <code>mixtime::temporally_complete(&lt;agg&gt;, &lt;disagg&gt;)</code>.</p>
+<p>Alternatively, the aggregation process could be brought into the grammar as a stat. However in this case I think it is better to keep aggregation as a pre-processing step (since there are many ways to aggregate time data).</p>
+</section>
+<section id="temporal-resolution-for-cyclical-time-viz" class="level2">
+<h2 class="anchored" data-anchor-id="temporal-resolution-for-cyclical-time-viz">Temporal resolution (for cyclical time viz)</h2>
+<!-- * Cyclical/Seasonal visualisation with different resolutions -->
+<p>High temporal resolution also presents a challenge for visualising cyclical time data. For the same reasons as continuous time plotting, the cyclical plots can be too dense to clearly show seasonal patterns.</p>
+<p>Showing the annual pattern with a 30-minute temporal resolution is too dense to clearly show the annual shape (since intra-day and intra-week variations produce excessive ink on the page).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>vic_elec <span class="sc">|&gt;</span> </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_season</span>(<span class="at">period =</span> <span class="st">"year"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Plot variable not specified, automatically selected `y = Demand`</code></pre>
+</div>
+<p><a href="../plots/plot-vic-elec-seasonal-raw-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/vic-elec-seasonal-raw-1.png" width="672"></span></a></p>
+</div>
+<p>Aggregating the data to weekly removes all intra-day and intra-week variations, making the annual seasonal patterns more visible.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>vic_elec <span class="sc">|&gt;</span> </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">index_by</span>(<span class="at">Week =</span> <span class="fu">yearweek</span>(Time)) <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Demand =</span> <span class="fu">sum</span>(Demand)) <span class="sc">|&gt;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Removing incomplete aggregation weeks by row</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="sc">-</span><span class="fu">n</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_season</span>(<span class="at">period =</span> <span class="st">"year"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Plot variable not specified, automatically selected `y = Demand`</code></pre>
+</div>
+<p><a href="../plots/plot-vic-elec-seasonal-weekly-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/vic-elec-seasonal-weekly-1.png" width="672"></span></a></p>
+</div>
+<p>The same applies to showing weekly patterns, where the intra-day variation distracts from the weekly seasonal pattern.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>vic_elec <span class="sc">|&gt;</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_season</span>(<span class="at">period =</span> <span class="st">"week"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Plot variable not specified, automatically selected `y = Demand`</code></pre>
+</div>
+<p><a href="../plots/plot-vic-elec-seasonal-week-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/vic-elec-seasonal-week-1.png" width="672"></span></a></p>
+</div>
+<p>Removing intra-day variation by aggregating the data to daily values makes the weekly seasonal patterns more visible.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>vic_elec <span class="sc">|&gt;</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">index_by</span>(<span class="at">Date =</span> <span class="fu">date</span>(Time)) <span class="sc">|&gt;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Demand =</span> <span class="fu">sum</span>(Demand)) <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_season</span>(<span class="at">period =</span> <span class="st">"week"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Plot variable not specified, automatically selected `y = Demand`</code></pre>
+</div>
+<p><a href="../plots/plot-vic-elec-seasonal-daily-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/vic-elec-seasonal-daily-1.png" width="672"></span></a></p>
+</div>
+<!-- TODO: Add shading for the weekend days to show the interaction between daily and weekly seasonal patterns. -->
+<!-- TODO: Also suffer. The Sunday should link to Monday, and the granularity alignment of days should map down to moments (center aligned). -->
+<p>Note that in this case, the daily and weekly seasonal patterns interact. The shape of the daily pattern changes from weekdays to weekends, and so there is merit in showing weekly seasonality with sub-daily resolution for this data… however this combination is specifically useful to show the interaction effect.</p>
+<p>Combining this type of viz with facetting (much like seasonal sub-series plots) can also be useful to show the interaction between daily and weekly seasonal patterns.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>vic_elec <span class="sc">|&gt;</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_season</span>(<span class="at">period =</span> <span class="st">"day"</span>, <span class="at">facet_period =</span> <span class="st">"week"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Plot variable not specified, automatically selected `y = Demand`</code></pre>
+</div>
+<p><a href="../plots/plot-vic-elec-seasonal-daily-facet-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/vic-elec-seasonal-daily-facet-1.png" width="672"></span></a></p>
+</div>
+</section>
+<section id="timezones-in-non-sub-daily-data" class="level2">
+<h2 class="anchored" data-anchor-id="timezones-in-non-sub-daily-data">Timezones in non-sub-daily data</h2>
+<!-- * Alignment of aggregate times that vary with timezones (e.g. showing same day but different timezones) -->
+<!-- * Positioning of timezoned daily data should be different in civil and absolute time. Civil time will behave as it is usually plotted, but absolute time should account fo the timezone offset between all the date timezones. -->
+<p>Timezones are almost exclusively attached to datetime/POSIXct time classes, although they are still relevant for daily/weekly/monthly/yearly data.</p>
+<p>In absolute time, the timing of a day in Australia can be very different to the timing of a day in the UK. With mixtime allowing a timezone to be attached to time of any granularity, it makes sense to plot the same day in different timezones with a different position.</p>
+<p>This is analogous to plotting time in civil/absolute time. Date are seemingly always plotted in civil time (where the date is positioned in the same place regardless of timezone), while datetimes are seemingly always plotted in absolute time (to avoid the visual challenges of timezone changes).</p>
+<p>Mapping aggregated timezoned dates to timezoned datetimes using center alignment (respecting temporal mass) will produce a different ‘center’ position of the same day for each timezone.</p>
+<p>Here is how daily data from Melbourne and London are usually shown (civil time):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>pedestrian <span class="sc">|&gt;</span> </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">between</span>(Date, <span class="fu">ymd</span>(<span class="st">"2015-03-02"</span>), <span class="fu">ymd</span>(<span class="st">"2015-03-12"</span>)),</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    Sensor <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Bourke Street Mall (North)"</span>, <span class="st">"QV Market-Elizabeth St (West)"</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">index_by</span>(Date) <span class="sc">|&gt;</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Sensor) <span class="sc">|&gt;</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Count =</span> <span class="fu">sum</span>(Count)) <span class="sc">|&gt;</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">Sensor =</span> <span class="fu">factor</span>(Sensor, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Bourke Street Mall (North)"</span>, <span class="st">"QV Market-Elizabeth St (West)"</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Melbourne"</span>, <span class="st">"London"</span>)),</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>(Count) <span class="sc">+</span> </span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-timezone-daily-civil-mellon-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/timezone-daily-civil-mellon-1.png" width="672"></span></a></p>
+</div>
+<p>However since a day in Melbourne (UTC+10) starts and ends 9 hours earlier than a day in London (UTC+1), the same day in Melbourne <em>should be</em> positioned 9 hours earlier than the same day in London when plotted in absolute time.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>pedestrian <span class="sc">|&gt;</span> </span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">between</span>(Date, <span class="fu">ymd</span>(<span class="st">"2015-03-02"</span>), <span class="fu">ymd</span>(<span class="st">"2015-03-12"</span>)),</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    Sensor <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Bourke Street Mall (North)"</span>, <span class="st">"QV Market-Elizabeth St (West)"</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">index_by</span>(Date) <span class="sc">|&gt;</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Sensor) <span class="sc">|&gt;</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Count =</span> <span class="fu">sum</span>(Count)) <span class="sc">|&gt;</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">Sensor =</span> <span class="fu">factor</span>(Sensor, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Bourke Street Mall (North)"</span>, <span class="st">"QV Market-Elizabeth St (West)"</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Melbourne"</span>, <span class="st">"London"</span>)),</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">Date =</span> <span class="fu">force_tzs</span>(</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.POSIXct</span>(Date), </span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">tzones =</span> <span class="fu">case_match</span>(Sensor, </span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Melbourne"</span> <span class="sc">~</span> <span class="st">"Australia/Melbourne"</span>, </span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"London"</span> <span class="sc">~</span> <span class="st">"Europe/London"</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>(Count) <span class="sc">+</span> </span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-timezone-daily-absolute-mellon-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/timezone-daily-absolute-mellon-1.png" width="672"></span></a></p>
+</div>
+<p>By default, ggtime shows data in civil time and so the position of daily data in different timezones is the same (and matching user’s expectations). However if the time scale maps data into a sub-daily granularity and absolute time is used, then the position of the daily data will be adjusted to account for the timezone offset.</p>
+<!-- TODO: Change x-scale to be referenced in UTC time and draw vline dashed annotations for start/end dates in UTC time. -->
+</section>
+<section id="aligning-temporal-aggregates" class="level2">
+<h2 class="anchored" data-anchor-id="aligning-temporal-aggregates">Aligning temporal aggregates</h2>
+<!-- * Alignment of aggregate times that vary with timezones shown with step geom or centered point (as opposed to left-aligned which seems to be standard based on data support/lackthereof) -->
+<p>When plotting aggregated time data, it is common to align the time points to the left of the aggregation period. This is in-part due to the lack of support for time measured with granularities other than daily or secondly in the underlying data structures. These data structure limitations make it common for monthly data (and minutely, hourly, weekly, etc.) to be stored using the first moment within that granularity (e.g.&nbsp;day 01 for monthly data, or 00:00 for hourly data).</p>
+<p>Although left alignment is the most common, it is not the only (nor best) way to align time data. Temporal aggregates shown on more granular time scales are best shown using a time interval from the first moment to the last moment of the aggregation period. This can be shown using a step geometry.</p>
+<p>Take for example pedestrian counts, which have been aggregated from the hourly totals to give daily averages of hourly counts (usually this is <code>sum()</code> not <code>mean()</code>, but averages are used for comparable scales).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>ped_global <span class="ot">&lt;-</span> pedestrian <span class="sc">|&gt;</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">between</span>(Date, <span class="fu">ymd</span>(<span class="st">"2015-03-02"</span>), <span class="fu">ymd</span>(<span class="st">"2015-03-12"</span>)),</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    Sensor <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Bourke Street Mall (North)"</span>, <span class="st">"QV Market-Elizabeth St (West)"</span>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Sensor =</span> <span class="fu">factor</span>(Sensor, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Bourke Street Mall (North)"</span>, <span class="st">"QV Market-Elizabeth St (West)"</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Melbourne"</span>, <span class="st">"London"</span>))</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>ped_global <span class="sc">|&gt;</span> </span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">index_by</span>(Date) <span class="sc">|&gt;</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Sensor) <span class="sc">|&gt;</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Count =</span> <span class="fu">mean</span>(Count)) <span class="sc">|&gt;</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.POSIXct</span>(Date), <span class="at">y =</span> Count, <span class="at">colour =</span> Sensor)) <span class="sc">+</span> </span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">x =</span> Date_Time), <span class="at">data =</span> <span class="fu">as_tibble</span>(ped_global) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">Date_Time =</span> <span class="fu">force_tz</span>(Date_Time, <span class="st">"UTC"</span>))) <span class="sc">+</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_step</span>() <span class="sc">+</span> </span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-timezone-daily-step-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/timezone-daily-step-1.png" width="672"></span></a></p>
+</div>
+<p>The plot uses POSIXct (ymdhms) to represent the time dimension, and so the daily aggregate point geoms are shown using the first moment of the day (h:m:s 00:00:00). The step geom shows the full time interval of the day, from 00:00:00 to 23:59:59. This is more appropriate than left-aligning the daily data, since it visually represents the full time period of the day.</p>
+<p>While being a more accurate portrayal of the data and it’s transformation/aggregation, steps are sub-optimal for showing the slopes between time points. To draw sloped lines that show the rate of change over some temporal duration, a specific position for a day on the POSIXct time scale is needed. While the first moment of the day is a common choice, any value along the step (<code>time_align = &lt;0-1&gt;</code>) is appropriate. We argue that the center (<code>time_align = 0.5</code>) is the best choice.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ped_global <span class="sc">|&gt;</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">index_by</span>(Date) <span class="sc">|&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Sensor) <span class="sc">|&gt;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Count =</span> <span class="fu">mean</span>(Count)) <span class="sc">|&gt;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.POSIXct</span>(Date), <span class="at">y =</span> Count, <span class="at">colour =</span> Sensor)) <span class="sc">+</span> </span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">x =</span> Date_Time), <span class="at">data =</span> <span class="fu">as_tibble</span>(ped_global) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">Date_Time =</span> <span class="fu">force_tz</span>(Date_Time, <span class="st">"UTC"</span>))) <span class="sc">+</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_step</span>() <span class="sc">+</span> </span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.POSIXct</span>(Date) <span class="sc">+</span> <span class="fu">hours</span>(<span class="dv">12</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-timezone-daily-step-center-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/timezone-daily-step-center-1.png" width="672"></span></a></p>
+</div>
+<!-- * NYT example of annual time frequency with daily annotation presenting alignment inaccuracies. <https://www.nytimes.com/2025/05/24/us/police-killings-george-floyd.html> -->
+<p>More care when considering the time alignment of aggregated time data will produce more accurate visualisations. As an example of how showing multiple temporal granularities (with left aligned points/lines) can be misleading, refer to the NYT visualisation of annual time series data annotated with a one-day event: <a href="https://www.nytimes.com/2025/05/24/us/police-killings-george-floyd.html" class="uri">https://www.nytimes.com/2025/05/24/us/police-killings-george-floyd.html</a>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="resources/nyt-floyd-old.png" class="img-fluid figure-img"></p>
+<figcaption>NYT visualisation on 24 May 2025 archived <a href="https://archive.is/0WHQT" class="uri">https://archive.is/0WHQT</a></figcaption>
+</figure>
+</div>
+<p>In this chart the annual time points are shown with daily points aligned with the start of each year, making the annotation for 25 May 2020 (the day George Floyd was killed) appear after the point showing 2020 homicide and police killings. This is misleading since the daily annotation intercepts the annual lines at a value higher than what is accurate for that time in 2020 (since there is an upward slope toward 2021). Assuming linearity between the annual points, the correct comparison value for 25 May 2020 is somewhere between the values for 2019 and 2020 (slightly lower than the 2020 point). Center alignment of the daily annotation would show the value for 25 May 2020 as being lower than the 2020 point, more accurately reflecting a smooth/linear ‘annual’ value for that day.</p>
+<p>A revised visualisation for this article was published, removing the misleading annotation avoiding the conflict between showing different temporal granularities.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="resources/nyt-floyd-new.png" class="img-fluid figure-img"></p>
+<figcaption>Revised NYT visualisation on 13 July 2025 archived <a href="https://archive.is/MjDXP" class="uri">https://archive.is/MjDXP</a></figcaption>
+</figure>
+</div>
+<!-- TODO: Create a panel of alternative viz for this data, one with steps another with left align (as per original figure) and finally center alignment. Show how the center alignment is more accurate for the daily annotation. -->
+</section>
+<section id="cyclical-time-visualisation" class="level2">
+<h2 class="anchored" data-anchor-id="cyclical-time-visualisation">Cyclical time visualisation</h2>
+<p>This is just hard to do in ggplot2, and so it is rarely done without plot helpers like <code>gg_season()</code>.</p>
+<p>Take for example a time plot of the monthly accidental deaths in the USA.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>uad <span class="ot">&lt;-</span> <span class="fu">as_tsibble</span>(USAccDeaths) <span class="sc">|&gt;</span> </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">index =</span> <span class="fu">as.Date</span>(index))</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>uad <span class="sc">|&gt;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> index, <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-time-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-time-1.png" width="672"></span></a></p>
+</div>
+<p>The easiest way in ggplot2 to visualise seasons is with facetting.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>uad <span class="sc">|&gt;</span> </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.Date</span>(index), <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>) <span class="sc">+</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="at">cols =</span> <span class="fu">vars</span>(<span class="fu">month</span>(index, <span class="at">label =</span> <span class="cn">TRUE</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-facet-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-facet-1.png" width="672"></span></a></p>
+</div>
+<p>This plot (a seasonal sub-series plot) is most useful for showing changes in a seasonal pattern over time. It does not work very well when there are many values in each season (e.g.&nbsp;24 hours in a day is 24 facets, hourly data with weekly seasonality is 168 facets, etc.).</p>
+<p>Instead, cyclical time visualisation is often done by showing the time dimension cyclically (not continuously). This currently requires data pre-processing to extract circular time component(s) from time points.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>uad <span class="sc">|&gt;</span> </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">month</span>(index), <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">colour =</span> <span class="fu">year</span>(index))) <span class="sc">+</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-sawtooth-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-sawtooth-pain-1.png" width="672"></span></a></p>
+</div>
+<p>The continuous component of time also needs to be managed in order to avoid sawtooth patterns across time.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>uad <span class="sc">|&gt;</span> </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">month</span>(index), <span class="at">y =</span> value, <span class="at">group =</span> <span class="fu">year</span>(index))) <span class="sc">+</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">colour =</span> <span class="fu">year</span>(index))) <span class="sc">+</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">xintercept =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">12</span>),</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">linetype =</span> <span class="st">"dashed"</span>,</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">"grey50"</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-fct-season-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-fct-season-pain-1.png" width="672"></span></a></p>
+</div>
+<p>Even still, this plot is not completely accurate since the month of December is not connected to January of the following year. The data-preprocessing step has lost this continuity in the data between December and January, and so this connection is difficult to show even with additional work (essentially a lot more data pre-processing).</p>
+<p>Instead, the cyclical component of time can be shown using a looped coordinate system. This coordinate space uses continuous time with loop points, retaining the connection between seasons while also eliminating the need to separately manage the circular and continuous components of time.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>uad <span class="sc">|&gt;</span> </span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>index, <span class="at">y=</span>value)) <span class="sc">+</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">xintercept =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">365-30</span>),</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">linetype =</span> <span class="st">"dashed"</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">"grey50"</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_loop</span>(<span class="at">time_loop =</span> <span class="st">"1 year"</span>, <span class="at">expand =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in scale_x_date(): A &lt;numeric&gt; value was passed to a Date scale.
+ℹ The value was converted to a &lt;Date&gt; object.</code></pre>
+</div>
+<p><a href="../plots/plot-uad-loop-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-loop-pain-1.png" width="672"></span></a></p>
+</div>
+<!-- TODO: Add vline reference lines to visually indicate the differences between this and the usual/previous graphic -->
+<!-- TODO: Also extend this to comparisons in polar coordinates -->
+</section>
+<section id="disconnection-in-circular-coordinate-spaces" class="level2">
+<h2 class="anchored" data-anchor-id="disconnection-in-circular-coordinate-spaces">Disconnection in circular coordinate spaces</h2>
+<!-- * Not completing the polar coordinates circle since graphically dec->jan, but semantically it does. -->
+<p>This disconnection in the cyclical component of time when using data-preprocessing is also present in polar coordinates.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tsibble</span>(USAccDeaths) <span class="sc">|&gt;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">month</span>(index), <span class="at">y =</span> value, <span class="at">group =</span> <span class="fu">year</span>(index))) <span class="sc">+</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_polar</span>() <span class="sc">+</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-fct-polar-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-fct-polar-pain-1.png" width="672"></span></a></p>
+</div>
+<p>In this case both Jan and Dec are shown in the same position at the top of the polar plot, with no connection between them. The common data pre-processing solution to this (e.g.&nbsp;ggperiodic) is to add a quasi-point at 359.9999 degrees to connect the two values.</p>
+<p>An alternative approach is to discretise the time dimension with labels:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tsibble</span>(USAccDeaths) <span class="sc">|&gt;</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">month</span>(index, <span class="at">label =</span> <span class="cn">TRUE</span>), <span class="at">y =</span> value, <span class="at">group =</span> <span class="fu">year</span>(index))) <span class="sc">+</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_polar</span>() <span class="sc">+</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-fct-polar-label-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-fct-polar-label-1.png" width="672"></span></a></p>
+</div>
+<p>Now Dec/Jan do not share the same position, but they are still not connected (and it is programmatically difficult to connect them). Another problem with discretisation of time in this way is that the temporal distance between months is no longer respected (e.g.&nbsp;Jan is 31 days, Feb is 28/29 days, etc.), making the plot less precise.</p>
+<p>The looped coordinate space exists as a coordinate space transformation, and so the inner coordinate space (usually cartesian) can be swapped out with a polar coordinate space. Much like before in cartesian coordiantes, this would allow continuous time to be plotted in polar coordinates with loops over each season.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tsibble</span>(USAccDeaths) <span class="sc">|&gt;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> index, <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_loop</span>(<span class="at">time_loop =</span> <span class="st">"1 year"</span>, <span class="at">coord =</span> <span class="fu">coord_polar</span>()) <span class="sc">+</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This currently doesn’t work in <code>coord_loop</code> (please <span class="citation" data-cites="mjskay">@mjskay</span> 🙏), but the equivalent can be achieved (ab)using the periodic nature of polar coordinates with out-of-bounds values on the time scale.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>month0 <span class="ot">=</span> <span class="fu">min</span>(uad<span class="sc">$</span>index)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>uad <span class="sc">|&gt;</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> index, <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_polar</span>() <span class="sc">+</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>) <span class="sc">+</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_date</span>(</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">limits =</span> month0 <span class="sc">+</span> <span class="fu">months</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">12</span>)),</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">oob =</span> scales<span class="sc">::</span>oob_keep,</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> month0 <span class="sc">+</span> <span class="fu">months</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">11</span>),</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">date_labels =</span> <span class="st">"%b"</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-loop-polar-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-loop-polar-pain-1.png" width="672"></span></a></p>
+</div>
+</section>
+<section id="unordered-discretisation-of-cyclical-time" class="level2">
+<h2 class="anchored" data-anchor-id="unordered-discretisation-of-cyclical-time">Unordered discretisation of cyclical time</h2>
+<p>Converting cyclical time into labels converts cyclical values (that naturally loop) into discrete values. If the ordering of the cyclical values is not preserved, then the plot’s seasons can easily be mis-ordered.</p>
+<p>Using <code>strftime()</code> to convert cyclical time into labels does not preserve the ordering of the cyclical values, and is tempting for many to use since it avoids the added dependency on lubridate.</p>
+<p>With lubridate (correctly ordered cyclical time points):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>uad <span class="sc">|&gt;</span> </span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.Date</span>(index), <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>) <span class="sc">+</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="at">cols =</span> <span class="fu">vars</span>(<span class="fu">month</span>(index, <span class="at">label =</span> <span class="cn">TRUE</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-fct-facet-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-fct-facet-pain-1.png" width="672"></span></a></p>
+</div>
+<p>With <code>strftime()</code> (not ordered cyclical time points, instead using lexical ordering):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>uad <span class="sc">|&gt;</span> </span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.Date</span>(index), <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>) <span class="sc">+</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="at">cols =</span> <span class="fu">vars</span>(<span class="fu">strftime</span>(index, <span class="at">format =</span> <span class="st">"%b"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-chr-facet-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-chr-facet-pain-1.png" width="672"></span></a></p>
+</div>
+<p>Also applies to x-axis for cyclical time visualisation. The ordering of the months is not preserved, and so the plot does not show the correct seasonal pattern.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tsibble</span>(USAccDeaths) <span class="sc">|&gt;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">strftime</span>(index, <span class="at">format =</span> <span class="st">"%b"</span>), <span class="at">y =</span> value, <span class="at">group =</span> <span class="fu">year</span>(index))) <span class="sc">+</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-chr-season-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-chr-season-pain-1.png" width="672"></span></a></p>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tsibble</span>(USAccDeaths) <span class="sc">|&gt;</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">strftime</span>(index, <span class="at">format =</span> <span class="st">"%b"</span>), <span class="at">y =</span> value, <span class="at">group =</span> <span class="fu">year</span>(index))) <span class="sc">+</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_polar</span>() <span class="sc">+</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Deaths"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-uad-chr-polar-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/uad-chr-polar-pain-1.png" width="672"></span></a></p>
+</div>
+</section>
+<section id="implicit-missing-temporal-values-are-dropped" class="level2">
+<h2 class="anchored" data-anchor-id="implicit-missing-temporal-values-are-dropped">Implicit missing temporal values are dropped</h2>
+<p>Implicit missing values in time series data are drawn together with lines when (explicit) missing values in ggplot2 are removed.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>fpp3<span class="sc">::</span>bank_calls <span class="sc">|&gt;</span> </span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(DateTime <span class="sc">&lt;</span> <span class="fu">ymd_hms</span>(<span class="st">"2003-03-20 00:00:00"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> DateTime, <span class="at">y =</span> Calls)) <span class="sc">+</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> </span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_datetime</span>(</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="st">"6 hours"</span>,</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">date_labels =</span> <span class="st">"%m %d %H:%M"</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 methods overwritten by 'feasts':
+  method                  from  
+  +.gg_tsensemble         ggtime
+  grid.draw.gg_tsensemble ggtime
+  print.gg_tsensemble     ggtime</code></pre>
+</div>
+<p><a href="../plots/plot-bank-calls-gaps-ggplot2-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/bank-calls-gaps-ggplot2-pain-1.png" width="672"></span></a></p>
+</div>
+<p>In ggtime <code>geom_time_line()</code> draws implicit missing values as gaps in the line, more accurately indicating the gaps in the time series.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>fpp3<span class="sc">::</span>bank_calls <span class="sc">|&gt;</span> </span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(DateTime <span class="sc">&lt;</span> <span class="fu">ymd_hms</span>(<span class="st">"2003-03-20 00:00:00"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fill_gaps</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> DateTime, <span class="at">y =</span> Calls)) <span class="sc">+</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="../plots/plot-bank-calls-gaps-ggtime-pain-7x5-1.png" download=""><span title="Click to download"><img src="timeviz-pain_files/figure-html/bank-calls-gaps-ggtime-pain-1.png" width="672"></span></a></p>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
