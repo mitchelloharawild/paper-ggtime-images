@@ -1203,8 +1203,8 @@
     },
     "ggtime": {
       "Package": "ggtime",
-      "Version": "0.1.0",
-      "Source": "Local",
+      "Version": "0.1.0.9000",
+      "Source": "GitHub",
       "Title": "Grammar of Graphics and Plot Helpers for Time Series Visualization",
       "Authors@R": "c( person( given = \"Mitchell\", family = \"O'Hara-Wild\", role = c(\"aut\", \"cre\"), email = \"mail@mitchelloharawild.com\", comment = c(ORCID = \"0000-0001-6729-7695\") ), person( given = \"Cynthia A.\",  family = \"Huang\", role = c(\"aut\"),  comment = c(ORCID = \"0000-0002-9218-987X\") ), person( given = \"Matthew\",  family = \"Kay\", role = c(\"aut\"),  comment = c(ORCID = \"0000-0001-9446-0419\") ), person( given = \"Rob\", family = \"Hyndman\", role = c(\"aut\"), comment = c(ORCID = \"0000-0002-2140-5352\") ), person( given = \"Earo\", family = \"Wang\", role = c(\"ctb\"), comment = c(ORCID = \"0000-0001-6448-5260\") ) )",
       "Description": "Extends the capabilities of 'ggplot2' by providing grammatical elements and plot helpers designed for visualizing temporal patterns. The  package implements a grammar of temporal graphics, which leverages calendar structures to highlight changes over time. The package also provides plot  helper functions to quickly produce commonly used time series graphics, including time plots, season plots, and seasonal sub-series plots.",
@@ -1214,7 +1214,10 @@
         "tsibbledata",
         "feasts",
         "fable",
-        "ggrepel"
+        "ggrepel",
+        "roxygen2",
+        "ggdist",
+        "distributional"
       ],
       "Config/testthat/edition": "3",
       "Encoding": "UTF-8",
@@ -1227,26 +1230,23 @@
         "lifecycle",
         "rlang",
         "scales",
-        "timechange",
         "tsibble",
         "fabletools",
         "dplyr",
         "lubridate (>= 1.7.1)",
         "tidyr",
-        "ggplot2",
-        "gtable",
-        "scales",
         "vctrs",
-        "R6"
+        "cli",
+        "vecvec"
       ],
-      "RemotePkgRef": "local::/home/mitchell/github/ggtime",
-      "RemoteType": "local",
-      "NeedsCompilation": "no",
       "Author": "Mitchell O'Hara-Wild [aut, cre] (ORCID: <https://orcid.org/0000-0001-6729-7695>), Cynthia A. Huang [aut] (ORCID: <https://orcid.org/0000-0002-9218-987X>), Matthew Kay [aut] (ORCID: <https://orcid.org/0000-0001-9446-0419>), Rob Hyndman [aut] (ORCID: <https://orcid.org/0000-0002-2140-5352>), Earo Wang [ctb] (ORCID: <https://orcid.org/0000-0001-6448-5260>)",
       "Maintainer": "Mitchell O'Hara-Wild <mail@mitchelloharawild.com>",
-      "Depends": [
-        "R (>= 4.1.0)"
-      ]
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "mitchelloharawild",
+      "RemoteRepo": "ggtime",
+      "RemoteRef": "main",
+      "RemoteSha": "5eaf898a1cc59aa868e77e4686ac43dac37b31ec"
     },
     "glue": {
       "Package": "glue",
@@ -2965,6 +2965,35 @@
       "Author": "Hadley Wickham [aut], Lionel Henry [aut], Davis Vaughan [aut, cre], data.table team [cph] (Radix sort based on data.table's forder() and their contribution to R's order()), Posit Software, PBC [cph, fnd]",
       "Maintainer": "Davis Vaughan <davis@posit.co>",
       "Repository": "RSPM"
+    },
+    "vecvec": {
+      "Package": "vecvec",
+      "Version": "0.1.0.9000",
+      "Source": "GitHub",
+      "Title": "Construct Mixed Type Data Structures with Vectors of Vectors",
+      "Authors@R": "c( person( given = \"Mitchell\", family = \"O'Hara-Wild\", role = c(\"aut\", \"cre\"), email = \"mail@mitchelloharawild.com\", comment = c(ORCID = \"0000-0001-6729-7695\") ))",
+      "Description": "Mixed type vectors are useful for combining semantically similar classes. Some examples of semantically related classes include time across different granularities (e.g. daily, monthly, annual) and probability distributions (e.g. Normal, Uniform, Poisson). These groups of vector types typically share common statistical operations which vary in results with the attributes of each vector. The 'vecvec' data structure facilitates efficient storage and computation across multiple vectors within the same object.",
+      "License": "MIT + file LICENSE",
+      "Imports": [
+        "rlang",
+        "vctrs"
+      ],
+      "Suggests": [
+        "lifecycle",
+        "testthat (>= 3.0.0)"
+      ],
+      "Config/testthat/edition": "3",
+      "Encoding": "UTF-8",
+      "Roxygen": "list(markdown = TRUE)",
+      "RoxygenNote": "7.3.2.9000",
+      "Author": "Mitchell O'Hara-Wild [aut, cre] (ORCID: <https://orcid.org/0000-0001-6729-7695>)",
+      "Maintainer": "Mitchell O'Hara-Wild <mail@mitchelloharawild.com>",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "mitchelloharawild",
+      "RemoteRepo": "vecvec",
+      "RemoteRef": "main",
+      "RemoteSha": "40083bdbb486b013a82d36e7506b36dddf1c50a1"
     },
     "viridisLite": {
       "Package": "viridisLite",
