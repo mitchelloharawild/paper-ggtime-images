@@ -4,10 +4,6 @@ format: gfm
 code-copy: true
 ---
 
-## External sources
-
-- gus-lipkin images comes from: <https://guslipkin.me/professional-blog/2022-04-14-reordering-bar-and-column-charts-with-ggplot-in-r>
-
 ## Submoduling Instructions
 
 Run these commands from inside the target repo (i.e. the one you want these images to be available in)
