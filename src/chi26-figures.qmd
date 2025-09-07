@@ -658,6 +658,17 @@ uad |>
   theme(legend.position = c(0.06,0.9))
 ```
 
+```{r}
+#| label: ggtime-ggdist-minimal
+library(ggplot2)
+ggplot(data = data.frame(
+  time = mixtime::yearmonth(Sys.Date()) + 0:3, 
+  dist = distributional::dist_normal(mean = c(1,5,3,7), sd = 1:4
+))) + 
+  ggdist::stat_lineribbon(aes(x = time, ydist = dist)) + 
+  scale_fill_brewer()
+```
+
 ## Temporal resolution / aggregation
 
 ![](chi26-figures/fig-wishlist-03.jpg)
