@@ -660,13 +660,23 @@ uad |>
 
 ```{r}
 #| label: ggtime-ggdist-minimal
-library(ggplot2)
 ggplot(data = data.frame(
   time = mixtime::yearmonth(Sys.Date()) + 0:3, 
   dist = distributional::dist_normal(mean = c(1,5,3,7), sd = 1:4
 ))) + 
   ggdist::stat_lineribbon(aes(x = time, ydist = dist)) + 
   scale_fill_brewer()
+```
+
+```{r}
+#| label: ggtime-ggdist-calendar
+ggplot(data = tibble::tibble(
+  time = seq(as.POSIXct("2025-01-01"), by = "hour", length.out = 24*30), 
+  dist = distributional::dist_normal(mean = sin((18 + seq_along(time))*pi/12), sd = 1)
+)) + 
+  ggdist::stat_ribbon(aes(x = time, ydist = dist)) + 
+  scale_fill_brewer() + 
+  ggtime::coord_calendar(time_rows = "1 week")
 ```
 
 ## Temporal resolution / aggregation
