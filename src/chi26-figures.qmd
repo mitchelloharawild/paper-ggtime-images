@@ -616,6 +616,18 @@ wrap_plots(implicit_na_before, implicit_na_after, ncol = 2, axes = "collect") +
   plot_annotation(title = "Implicit missing time values")
 ```
 
+```{r}
+#| label: contiguous-censored-calendar
+bank_calls |> 
+  filter(DateTime < ymd_hms("2003-03-15 00:00:00")) |>
+  mutate(
+    DateTime = seq_along(DateTime)
+  ) |> 
+  ggplot(aes(x = DateTime, y = Calls)) +
+  geom_line() +
+  geom_vline(xintercept = (0:10)*169, linetype = "dashed", color = "gray50")
+```
+
 ## ggtime <3 ggdist
 
 ggtime is designed to work well with other extension packages, especially those that enable plotting of other semantic variables such as ggdist for visualising distributions.
