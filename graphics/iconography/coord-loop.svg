@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="18.103926mm"
+   height="12.749034mm"
+   viewBox="0 0 18.103926 12.749034"
+   version="1.1"
+   id="svg7"
+   sodipodi:docname="coord-loop.svg"
+   inkscape:version="1.4.2 (1:1.4.2+202505120737+ebf0e940d0)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs7">
+    <marker
+       style="overflow:visible"
+       id="ArrowTriangleStylized"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Stylized triangle arrow"
+       markerWidth="0.75"
+       markerHeight="0.75"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="m 6,0 c -3,1 -7,3 -9,5 0,0 0,-4 2,-5 -2,-1 -2,-5 -2,-5 2,2 6,4 9,5 z"
+         id="path4" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="8.5879773"
+     inkscape:cx="21.483522"
+     inkscape:cy="21.716406"
+     inkscape:window-width="1920"
+     inkscape:window-height="1052"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg7" />
+  <!-- Coordinate grid -->
+  <!-- Top time series (primary) -->
+  <!-- Middle time series (primary) -->
+  <!-- Bottom time series (secondary) -->
+  <path
+     style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 0.07500027,0.075001 V 12.673859"
+     id="path18"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
+     d="m 4.563467,0.075001 1.47e-5,12.598858"
+     id="path17"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
+     d="m 9.0519336,0.075001 2.95e-5,12.598858"
+     id="path16"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
+     d="m 13.5404,0.075001 4.5e-5,12.598858"
+     id="path15"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
+     d="m 18.028867,0.075001 1.33e-4,12.599"
+     id="path14"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 18.086218,0.075 H 2.7368907e-7"
+     id="path13" />
+  <path
+     style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 18.086218,12.674034 2.7368907e-7,12.673968"
+     id="path10" />
+  <text
+     x="0.84549588"
+     y="8.347641"
+     font-size="2.38125px"
+     font-family="sans-serif"
+     fill="#333333"
+     id="text8"
+     style="stroke-width:0.264583">Q1</text>
+  <text
+     x="5.0443707"
+     y="8.347641"
+     font-size="2.38125px"
+     font-family="sans-serif"
+     fill="#333333"
+     id="text18"
+     style="stroke-width:0.264583">Q2</text>
+  <text
+     x="9.6361494"
+     y="8.347641"
+     font-size="2.38125px"
+     font-family="sans-serif"
+     fill="#333333"
+     id="text19"
+     style="stroke-width:0.264583">Q3</text>
+  <text
+     x="14.216023"
+     y="8.347641"
+     font-size="2.38125px"
+     font-family="sans-serif"
+     fill="#333333"
+     id="text20"
+     style="stroke-width:0.264583">Q4</text>
+  <path
+     d="m 6.7732711,4.5187779 3.2606819,-0.02652"
+     style="fill:none;stroke:#8a8a8a;stroke-width:0.264583;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#ArrowTriangleStylized)"
+     id="path1"
+     sodipodi:nodetypes="cc" />
+  <path
+     d="m 11.326761,4.5187779 3.250019,-0.02652"
+     style="fill:none;stroke:#8a8a8a;stroke-width:0.264583;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#ArrowTriangleStylized)"
+     id="path22"
+     sodipodi:nodetypes="cc" />
+  <path
+     d="M 15.856116,4.5187779 18.029,4.4922579"
+     style="fill:none;stroke:#8a8a8a;stroke-width:0.264583;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:"
+     id="path23"
+     sodipodi:nodetypes="cc" />
+  <path
+     d="m 0,4.5187779 0.98003211,-0.02652"
+     style="fill:none;stroke:#8a8a8a;stroke-width:0.264583;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#ArrowTriangleStylized)"
+     id="path24"
+     sodipodi:nodetypes="cc" />
+  <path
+     d="m 2.2388843,4.5187779 3.2606819,-0.02652"
+     style="fill:none;stroke:#8a8a8a;stroke-width:0.264583;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#ArrowTriangleStylized)"
+     id="path25"
+     sodipodi:nodetypes="cc" />
+  <circle
+     style="fill:#333333;fill-opacity:1;stroke:none;stroke-width:0.15;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
+     id="path20"
+     cx="2.2706745"
+     cy="4.4965844"
+     r="0.5" />
+  <circle
+     style="fill:#333333;fill-opacity:1;stroke:none;stroke-width:0.15;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
+     id="circle20"
+     cx="6.8057008"
+     cy="4.4965844"
+     r="0.5" />
+  <circle
+     style="fill:#333333;fill-opacity:1;stroke:none;stroke-width:0.15;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
+     id="circle21"
+     cx="11.340727"
+     cy="4.4965844"
+     r="0.5" />
+  <circle
+     style="fill:#333333;fill-opacity:1;stroke:none;stroke-width:0.15;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0"
+     id="circle22"
+     cx="15.875753"
+     cy="4.4965844"
+     r="0.5" />
+</svg>

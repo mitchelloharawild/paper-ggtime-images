@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="96"
+   height="72.472191"
+   viewBox="0 0 96 72.472191"
+   fill="none"
+   version="1.1"
+   id="svg14"
+   sodipodi:docname="calendar-seasonal.svg"
+   inkscape:version="1.4.2 (1:1.4.2+202505120737+ebf0e940d0)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs14" />
+  <sodipodi:namedview
+     id="namedview14"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="3.7208793"
+     inkscape:cx="21.097164"
+     inkscape:cy="18.678381"
+     inkscape:window-width="1870"
+     inkscape:window-height="1052"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg14" />
+  <!-- Calendar Columns (Days) -->
+  <g
+     id="g16"
+     transform="translate(-14.5,-34.923)">
+    <path
+       id="line16"
+       style="stroke:#e0e0e0;stroke-dasharray:2;stroke-dashoffset:0"
+       d="M 82.85714,35.423 82.857,98.759727 M 110,35.423 V 82.881 M 96.428574,35.423 V 82.881 M 69.285713,35.423 V 98.759727 M 55.714,35.423 55.714287,98.759727 M 42.142857,51.142 V 98.759727 M 28.57143,51.142 V 98.759727 M 15,51.142 v 47.617727"
+       sodipodi:nodetypes="cccccccccccccccc" />
+    <path
+       id="path17"
+       style="stroke:#e0e0e0;stroke-dasharray:2;stroke-dashoffset:0"
+       d="M 82.857,98.7 H 15 M 110,82.881 15,82.88075 M 110,67.0615 H 15 M 110,35.423 H 55.714 M 110,51.24225 15,51.142"
+       sodipodi:nodetypes="cccccccccc" />
+  </g>
+  <!-- Line Graphs with weekend amplitude adjustment -->
+  <!-- Day Initials -->
+  <g
+     id="g17"
+     transform="translate(-7.1247859,-39.617797)">
+    <text
+       x="10.918502"
+       y="112"
+       font-size="9px"
+       font-family="sans-serif"
+       fill="#333333"
+       id="text8">M</text>
+    <text
+       x="26.073936"
+       y="112"
+       font-size="9px"
+       font-family="sans-serif"
+       fill="#333333"
+       id="text9">T</text>
+    <text
+       x="37.962353"
+       y="112"
+       font-size="9px"
+       font-family="sans-serif"
+       fill="#333333"
+       id="text10">W</text>
+    <text
+       x="53.216793"
+       y="112"
+       font-size="9px"
+       font-family="sans-serif"
+       fill="#333333"
+       id="text11">T</text>
+    <text
+       x="66.617218"
+       y="112"
+       font-size="9px"
+       font-family="sans-serif"
+       fill="#333333"
+       id="text12">F</text>
+    <text
+       x="80.368645"
+       y="112"
+       font-size="9px"
+       font-family="sans-serif"
+       fill="#333333"
+       id="text13">S</text>
+    <text
+       x="93.940079"
+       y="112"
+       font-size="9px"
+       font-family="sans-serif"
+       fill="#333333"
+       id="text14">S</text>
+  </g>
+  <path
+     style="stroke:#333333;stroke-width:2;stroke-linecap:round;stroke-dasharray:none"
+     d="m 1.5,45.87514 5.815981,-4.667819 6.755448,4.062232 6.737312,-5.325434 6.834116,3.528884 6.658644,-6.060644 6.912785,7.425224 6.579974,-6.154881 6.991454,6.079071 6.501306,-6.685551 7.070123,7.263089 6.422637,-1.606479 7.148791,2.242711 6.343969,-1.34261 6.22746,1.493419"
+     id="path23" />
+  <path
+     style="stroke:#333333;stroke-width:2;stroke-linecap:round;stroke-dasharray:none"
+     d="m 42.214,12.83758 5.58026,-3.442854 6.991454,3.367044 6.501306,-3.830786 7.070123,4.408324 6.422637,-1.606479 7.148791,2.242711 6.343969,-1.34261 6.22746,1.493419"
+     id="path22"
+     sodipodi:nodetypes="ccccccccc" />
+  <path
+     style="stroke:#333333;stroke-width:2;stroke-linecap:round;stroke-dasharray:none"
+     d="m 1.5,60.305019 5.815981,-5.952464 6.755448,6.203304 6.737312,-4.183524 6.834116,4.099833 6.658644,-4.205043 6.912785,4.570455 6.579974,-10.722504 6.991454,10.646694 6.501306,-3.973523 6.06998,4.551063"
+     id="path21"
+     sodipodi:nodetypes="ccccccccccc" />
+  <path
+     style="stroke:#333333;stroke-width:2;stroke-linecap:round;stroke-dasharray:none"
+     d="m 1.5,29.875138 5.815981,-6.666155 6.755448,5.0614 6.737312,-3.041622 6.834116,3.528884 6.658644,-5.061476 6.912785,5.141412 6.579974,-3.728331 6.991454,3.652521 6.501306,-3.545309 7.070123,4.836538 6.422637,-1.46374 7.148791,1.386281 L 88.27254,27.633763 94.5,30.12635"
+     id="path24"
+     sodipodi:nodetypes="ccccccccccccccc" />
+</svg>
