@@ -198,3 +198,84 @@ icon_theme <- list(
   )
 # Melbourne DST ends in 2016 on october 2
 ```
+
+Coord polar with ragged cycles
+
+```{r}
+#| label: sunspots-polar
+tsbl_sunspot <- as_tsibble(sunspot.year) 
+tsbl_sunspot_peak <- tsbl_sunspot |> 
+  filter(
+    slider::slide_lgl(
+      .x = -value, .f = is_peak,
+      .before = 2,.after = 2,
+      .complete = TRUE
+    )
+  )
+
+(tsbl_sunspot |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() +
+  # geom_point(data = tsbl_sunspot_peak, color = "red", size = 2) +
+  coord_loop(
+    loops = tsbl_sunspot_peak$index, expand = c(TRUE, FALSE),
+    coord = coord_radial()
+  ) + 
+  scale_x_continuous(n.breaks = 8, labels = function(x) paste0("Y", x - 1711)) + 
+  labs(x = NULL, y = "Annual Sunspot Counts")) |> 
+  ggsave("plots/plot-sunspots-polar.png", plot = _, width = 4, height = 4, units = "cm")
+```
+
+
+```{r}
+p <- tsibble::pedestrian |>
+  dplyr::filter(Date < "2015-02-01") |>
+  mutate(
+    Sensor = factor(Sensor, levels = c("Southern Cross Station", "Birrarung Marr", "QV Market-Elizabeth St (West)"), labels = c("Southern Cross Station", "Birrarung Marr", "QV Market"))
+  ) |> 
+  ggplot(aes(x = Date_Time, y = Count, color = Sensor)) +
+  geom_line() +
+  coord_calendar(time_rows = "1 week") +
+  scale_x_datetime(date_breaks = "1 day", date_labels = "%a") +
+  scale_y_continuous(breaks = NULL) +
+  facet_grid(cols=vars(yearmonth(Date))) +
+  theme(
+    strip.background = element_rect(fill = "grey90", colour = "black"),
+    panel.background = element_rect(fill = "white", colour = "black")
+  ) +
+  labs(x = NULL, y = "Hourly pedestrian counts", colour = NULL) +
+  theme(legend.position = "bottom")
+
+ggsave("plots/plot-pedestrian-calendar.png", plot = p, width = 12, height = 8, units = "cm")
+```
+
+
+```{r}
+p <- aus_production |> 
+  filter(year(Quarter) >= 1991) |>
+  ggtime::gg_subseries(Beer) + 
+  theme(
+    strip.background = element_rect(fill = "grey90", colour = "black"),
+    panel.background = element_rect(fill = "white", colour = "black")
+  )
+p
+ggsave("plots/plot-seasonal-subseries.png", plot = p, width = 12, height = 8, units = "cm")
+```
+
+
+```{r}
+library(fable)
+uad <- as_tsibble(USAccDeaths) 
+p <- uad |> 
+  model(
+    ETS = ETS(value),
+  ) |>
+  forecast(h = "3 years") |>
+  autoplot(uad) + 
+  theme(legend.position = "none") + 
+  labs(x = NULL, y = "Monthly US accidental deaths") + 
+  scale_x_yearmonth(date_labels = "%Y", date_breaks = "2 year")
+p
+
+ggsave("plots/plot-forecast.png", plot = p, width = 12, height = 8, units = "cm")
+```
