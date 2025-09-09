@@ -1,0 +1,200 @@
+---
+title: Polished figures for CHI26 paper
+format: 
+  html:
+    code-fold: true
+    toc: true
+  # revealjs:
+  #   scrollable: true
+  #   toc: true     # this adds a TOC slide at the beginning
+execute:
+  cache: true
+  echo: true
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| echo: true
+library(ggplot2)
+library(tsibbledata)
+library(dplyr)
+library(lubridate)
+library(tsibble)
+library(ggtime)
+library(patchwork)
+theme_set(theme_minimal())
+
+uad <- as_tsibble(USAccDeaths) |> 
+  as_tibble() |> 
+  mutate(index = as.Date(index))
+
+bank_calls <- fpp3::bank_calls
+
+pedestrian <- tsibble::pedestrian |>
+  tsibble::fill_gaps() |>
+  mutate(Date = as.Date(strftime(Date_Time, "%Y-%m-%d"))) |>
+  arrange(Sensor, Date_Time)
+
+# plot_save <- function(x, name = knitr::opts_current$get("label"), 12, 8) 
+#   ggsave(
+#     filename = fig <- paste0("../plots/", name, ".png"),
+#     plot = x,
+#     width = width,
+#     height = height,
+#     units = "cm",
+#     dpi = 300
+#   )
+#   include_graphics(fig)
+# }
+
+knitr::knit_hooks$set(plot = function(x, options) {
+  # x: the default plot file path (knitr saves the plot here)
+  # options: chunk options, includes label, fig.num, etc.
+  # We'll copy/sync the plot to "plots" using ggsave
+
+  # Compute a name for the saved file
+  label <- options$label
+  fig.num <- options$fig.num %||% 1
+  fig.cur <- options$fig.cur %||% 1
+  fig.width <- options$fig.width %||% 12
+  fig.height <- options$fig.height %||% 8
+  ext <- tools::file_ext(x)
+  # New filename, e.g. plots/my-label-1.png
+  plot_file <- sprintf("../plots/plot-%s-%ix%i-%d.%s", label, fig.width, fig.height, fig.cur, ext)
+
+  # Copy the image to the plots/ path
+  file.copy(x, plot_file, overwrite = TRUE)
+  
+  # Now, continue as usual -- display the plot in the final document
+  out <- knitr::hook_plot_md(x, options)
+
+  sprintf('<a href="%s" download><span title="Click to download">%s</span></a>', plot_file, out)
+})
+
+# Fudge the data to correctly handle DST changes
+# Since the data was provided in civil time, the 2AM counts before/after DST are combined.
+pedestrian[53763, "Count"] <- 9
+pedestrian[53764, "Count"] <- 5
+
+sunspots <- as_tibble(as_tsibble(sunspot.year)) |> 
+  transmute(
+    Year = mixtime::year(index-1970L),
+    Sunspots = value
+  )
+```
+
+
+
+```{r}
+#| label: implicit-missing
+bank_calls |> 
+  filter(DateTime < ymd_hms("2003-03-15 00:00:00")) |>
+  ggplot(aes(x = DateTime, y = Calls)) +
+  geom_line() + 
+  labs(x = NULL, y = "The 5-minute call volume of a bank") 
+```
+
+
+```{r}
+#| label: ragged-polar
+is_peak <- function(window) {
+  center <- ceiling(length(window) / 2)
+  which.max(window) == center
+}
+sunspot_peaks <- sunspots |> 
+  dplyr::filter(
+    slider::slide_lgl(
+      .x = Sunspots, .f = is_peak,
+      .before = 2,.after = 2,
+      .complete = TRUE
+    )
+  )
+
+sunspots |> 
+  ggplot(aes(x = Year, y = Sunspots)) +
+  geom_time_line() +
+  geom_point(data = sunspot_peaks, color = "red", size = 2) +
+  scale_x_mixtime(warps = sunspot_peaks$Year) + 
+  coord_loop(loops = sunspot_peaks$Year)
+```
+
+
+```{r}
+#| label: pedestrian-dst-polar-icons
+#| fig-width: 1
+#| fig-height: 0.6
+
+icon_theme <- list(
+  theme_void(), 
+  theme(
+    plot.background = element_rect(colour = "black", fill = "grey85"),
+    strip.background = element_rect(fill = "grey70", colour = "black")
+  )
+)
+
+(pedestrian |> 
+  filter(Sensor == "Southern Cross Station") |> 
+  filter(Date >= ymd("2016-10-03") & Date <= ymd("2016-10-09")) |> 
+  ggplot(aes(x = Date_Time, y = Count)) +
+  geom_line() + 
+  labs(x = NULL, y = NULL) + 
+  icon_theme) |> 
+  ggsave(
+    "graphics/navigation-subfig/pedestrian-cartesian.svg", plot = _, width = 2, height = 2, units = "cm"
+  )
+
+(pedestrian |> 
+  filter(Sensor == "Southern Cross Station") |> 
+  filter(Date >= ymd("2016-10-03") & Date <= ymd("2016-10-09")) |> 
+  ggplot(aes(x = hour(Date_Time), group = Date, y = Count)) +
+  geom_line() + 
+  labs(x = NULL, y = NULL) + 
+  icon_theme) |> 
+  ggsave(
+    "graphics/navigation-subfig/pedestrian-ggplot-loop.svg", plot = _, width = 2, height = 2, units = "cm"
+  )
+
+(pedestrian |> 
+  filter(Sensor == "Southern Cross Station") |> 
+  filter(Date >= ymd("2016-10-03") & Date <= ymd("2016-10-16")) |> 
+  ggplot(aes(x = Date_Time, y = Count)) +
+  geom_line() + 
+  facet_wrap(
+    vars(floor_date(Date_Time, "1 week", week_start = 1L)),
+    ncol = 1L,
+    scales = "free_x"
+  ) +
+  labs(x = NULL, y = NULL) + 
+  icon_theme) |> 
+  ggsave(
+    "graphics/navigation-subfig/pedestrian-ggplot-calendar.svg", plot = _, width = 2, height = 2, units = "cm"
+  )
+
+# tz forced because we're using lubridate::floor_date for now which ignores tz
+# this is fixed in mixtime
+(tsibble::pedestrian |> 
+  filter(Sensor == "Southern Cross Station") |> 
+  filter(Date >= ymd("2016-10-03") & Date <= ymd("2016-10-09")) |> 
+  ggplot(aes(x = force_tz(Date_Time, "UTC"), y = Count)) +
+  geom_line() + 
+  coord_loop(time_loops = "1 day") +
+  labs(x = NULL, y = NULL) + 
+  icon_theme) |> 
+  ggsave(
+    "graphics/navigation-subfig/pedestrian-ggtime-loop.svg", plot = _, width = 2, height = 2, units = "cm"
+  )
+
+(tsibble::pedestrian |> 
+  filter(Sensor == "Southern Cross Station") |> 
+  filter(Date >= ymd("2016-10-03") & Date <= ymd("2016-10-16")) |> 
+  ggplot(aes(x = force_tz(Date_Time, "UTC"), y = Count)) +
+  geom_line() + 
+  coord_calendar(time_rows = "1 week") +
+  labs(x = NULL, y = NULL) + 
+  icon_theme) |> 
+  ggsave(
+    "graphics/navigation-subfig/pedestrian-ggtime-calendar.svg", plot = _, width = 2, height = 2, units = "cm"
+  )
+# Melbourne DST ends in 2016 on october 2
+```
