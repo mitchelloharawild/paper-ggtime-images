@@ -23,7 +23,11 @@ library(lubridate)
 library(tsibble)
 library(ggtime)
 library(patchwork)
-theme_set(theme_minimal())
+theme_set(theme_minimal() + 
+  theme(
+    strip.background = element_rect(fill = "grey90", colour = "black"),
+    panel.background = element_rect(fill = "white", colour = "black")
+  ))
 
 uad <- as_tsibble(USAccDeaths) |> 
   as_tibble() |> 
@@ -35,42 +39,6 @@ pedestrian <- tsibble::pedestrian |>
   tsibble::fill_gaps() |>
   mutate(Date = as.Date(strftime(Date_Time, "%Y-%m-%d"))) |>
   arrange(Sensor, Date_Time)
-
-# plot_save <- function(x, name = knitr::opts_current$get("label"), 12, 8) 
-#   ggsave(
-#     filename = fig <- paste0("../plots/", name, ".png"),
-#     plot = x,
-#     width = width,
-#     height = height,
-#     units = "cm",
-#     dpi = 300
-#   )
-#   include_graphics(fig)
-# }
-
-knitr::knit_hooks$set(plot = function(x, options) {
-  # x: the default plot file path (knitr saves the plot here)
-  # options: chunk options, includes label, fig.num, etc.
-  # We'll copy/sync the plot to "plots" using ggsave
-
-  # Compute a name for the saved file
-  label <- options$label
-  fig.num <- options$fig.num %||% 1
-  fig.cur <- options$fig.cur %||% 1
-  fig.width <- options$fig.width %||% 12
-  fig.height <- options$fig.height %||% 8
-  ext <- tools::file_ext(x)
-  # New filename, e.g. plots/my-label-1.png
-  plot_file <- sprintf("../plots/plot-%s-%ix%i-%d.%s", label, fig.width, fig.height, fig.cur, ext)
-
-  # Copy the image to the plots/ path
-  file.copy(x, plot_file, overwrite = TRUE)
-  
-  # Now, continue as usual -- display the plot in the final document
-  out <- knitr::hook_plot_md(x, options)
-
-  sprintf('<a href="%s" download><span title="Click to download">%s</span></a>', plot_file, out)
-})
 
 # Fudge the data to correctly handle DST changes
 # Since the data was provided in civil time, the 2AM counts before/after DST are combined.
@@ -278,4 +246,153 @@ p <- uad |>
 p
 
 ggsave("plots/plot-forecast.png", plot = p, width = 12, height = 8, units = "cm")
+```
+
+
+NYT usage scenario figure
+
+```{r}
+#| label: nyt-floyd
+#| code-fold: true
+#| message: false
+#| fig-width: 12
+#| fig-height: 6
+library(ggplot2)
+library(dplyr)
+
+col_homicide <- "#FB8C58"
+col_police_killings <- "#980000"
+
+nyt_floyd_plot_common <- function(p, xoffset = 0) {
+  p +   
+  # Add vertical line for George Floyd's death (assuming 2020)
+  geom_vline(xintercept = 2020.3686, linetype = "dashed", color = "gray60", linewidth = 0.8) +
+  
+  # Custom colors to match the reference
+  scale_color_manual(values = c("Homicides" = col_homicide, "Police killings" = col_police_killings)) +
+  
+  # Format y-axis as years
+  scale_x_continuous(
+    breaks = 2015:2024 + xoffset, labels = \(x) scales::number(floor(x)),
+    expand = c(0, 0.2)
+  ) +
+
+  # Format y-axis as percentages
+  scale_y_continuous(
+    breaks = seq(-10, 50, 10), labels = scales::label_percent(scale = 1),
+    limits = c(-10, 50), expand = c(0, 0)
+  ) +
+
+  # Customize theme
+  theme_minimal() +
+  theme(
+    # Remove legend
+    legend.position = "none",
+    
+    # Grid lines
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "gray90", size = 0.5),
+    
+    # Axis styling
+    axis.line.x = element_line(color = "black", size = 0.8),
+    axis.text = element_text(color = "gray30", size = 10),
+    axis.title = element_blank(),
+    axis.ticks.x = element_line(color = "gray30"),
+    axis.ticks.y = element_blank(),
+    
+    # Plot styling
+    plot.title = element_text(size = 16, face = "bold", margin = margin(b = 5)),
+    plot.subtitle = element_text(size = 12, color = "gray50", margin = margin(b = 20)),
+    plot.caption = element_text(size = 9, color = "gray50", hjust = 0, margin = margin(t = 20)),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA)
+  ) +
+  
+  # Add labels
+  labs(
+    title = "Police killings continued to rise as other homicides fell",
+    subtitle = "Percent change in homicides and police killings since 2015",
+    caption = "Sources: Analysis of data compiled by The Washington Post and Mapping Police Violence. Homicide data from the\nCenters for Disease Control and Prevention. — The New York Times"
+  ) +
+  
+  # Add direct labels for the lines (you may need to adjust positions based on your data)
+  annotate(
+    "text", x = 2022.3 + xoffset, y = 39, label = "Homicides", 
+    color = col_homicide, size = 4, hjust = 0, fontface = "bold"
+  ) +
+  
+  annotate(
+    "text", x = 2022.3 + xoffset, y = 6, label = "Police killings", 
+    color = col_police_killings, size = 4, hjust = 0, fontface = "bold"
+  ) +
+  
+  # Add annotation for George Floyd's death
+  annotate(
+    "label", x = 2020.3686, y = 50-xoffset*10, label = "Death of\nGeorge Floyd\nMay 25, 2020", 
+     hjust = 0.5, vjust = 0.3, size = 4, color = "gray30", fill = "white", border.colour = "white"
+  ) +
+
+  # Add shaded region for the year 2020
+  annotate("rect", xmin = 2020, xmax = 2021, 
+           ymin = -Inf, ymax = Inf, fill = "grey80", alpha = 0.3) +
+
+  # Expand x-axis to make room for labels
+  coord_cartesian(clip = "off")
+}
+
+p1 <- (readr::read_csv("chi26-figures/nyt-floyd.csv") |> 
+  ggplot(aes(x = year, y = percent_change, colour = type)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2.5)) |> 
+  nyt_floyd_plot_common()
+p1
+
+p2 <- (readr::read_csv("chi26-figures/nyt-floyd.csv") |> 
+  ggplot(aes(x = year, y = percent_change, colour = type)) +
+  geom_step(linewidth = 1.2)) |> 
+  nyt_floyd_plot_common()
+p2
+
+p3 <- (readr::read_csv("chi26-figures/nyt-floyd.csv") |> 
+  ggplot(aes(x = year + 0.5, y = percent_change, colour = type)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2.5)) |> 
+  nyt_floyd_plot_common(xoffset = 0.5)
+p3
+```
+
+
+```{r}
+#| label: sawtooth-group
+# Using the NYT Floyd data to show sawtooth effect by missing the group by type
+p <- readr::read_csv("src/chi26-figures/nyt-floyd.csv") |> 
+  ggplot(aes(x = year, y = percent_change)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2.5) + 
+  scale_x_continuous(breaks = 2015:2024, labels = function(x) scales::number(floor(x))) +
+  labs(x = "Year", y = "Percent change since 2015")
+ggsave("plots/plot-sawtooth-group.png", plot = p, width = 12, height = 8, units = "cm")
+```
+
+
+```{r}
+#| label: sawtooth-duplicate
+
+aus_pop <- global_economy |> 
+  filter(Country %in% c("Australia")) |> 
+  select(Year, Country, Population) |> 
+  as_tibble() |> 
+  filter(Year >= 2000)
+aus_pop <- bind_rows(aus_pop, aus_pop[11,])
+
+aus_pop[19,]$Population <- aus_pop[19,]$Population*1.03
+
+p <- aus_pop |> 
+  ggplot(aes(x = Year, y = Population)) +
+  geom_line(linewidth = 1.2) +
+  scale_x_continuous(n.breaks = 6) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 1, scale = 1e-6, suffix = "m")) +
+  labs(x = "Year", y = "Australian population (millions)") 
+ggsave("plots/plot-sawtooth-duplicate.png", plot = p, width = 12, height = 8, units = "cm")
 ```
