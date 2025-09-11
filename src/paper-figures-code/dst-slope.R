@@ -6,11 +6,11 @@ dst_start_mel <- as.POSIXct("2025-10-05 02:00:00", tz = "Australia/Melbourne")
 
 dst_start <- tibble(
   time = dst_start_mel + 3600 * (-2:2),
-  values = 1:5 + rnorm(5, sd = 0.3)
+  values = c(0, 0.18, 0.606, 0.689, 1)
 )
 dst_end <- tibble(
   time = dst_end_mel + 3600 * (-4:1),
-  values = 1:6 + rnorm(6, sd = 0.3)
+  values = c(0, 0.274, 0.393, 0.666, 0.752, 1)
 )
 
 dst_change <- bind_rows(
@@ -68,7 +68,7 @@ ggsave(
   "graphics/dst-subfig/dst-civil-ggtime.svg",
   dst_civil_ggtime,
   width = 6,
-  height = 2
+  height = 1.5
 )
 
 dst_civil_ggplot2 <- dst_change |>
@@ -93,5 +93,5 @@ ggsave(
   "graphics/dst-subfig/dst-civil-ggplot2.svg",
   dst_civil_ggplot2,
   width = 6,
-  height = 2
+  height = 1.5
 )
