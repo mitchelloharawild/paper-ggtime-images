@@ -1,4 +1,4 @@
-source("setup-common.R")
+source("src/paper-figures-code/setup-common.R")
 library(ggplot2)
 library(dplyr)
 

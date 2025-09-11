@@ -1,4 +1,4 @@
-source("setup-common.R")
+source("src/paper-figures-code/setup-common.R")
 aus_pop <- global_economy |> 
   filter(Country %in% c("Australia")) |> 
   select(Year, Country, Population) |> 

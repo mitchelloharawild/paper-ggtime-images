@@ -1,4 +1,4 @@
-source("setup-common.R")
+source("src/paper-figures-code/setup-common.R")
 p <- aus_production |> 
   filter(year(Quarter) >= 1991) |>
   ggtime::gg_subseries(Beer) + 

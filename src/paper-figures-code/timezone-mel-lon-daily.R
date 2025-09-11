@@ -1,4 +1,4 @@
-source("setup-common.R")
+source("src/paper-figures-code/setup-common.R")
 MEL_LDN_mockdata <- pedestrian |> 
   filter(
     between(Date, ymd("2015-03-02"), ymd("2015-03-12")),

@@ -1,4 +1,4 @@
-source("setup-common.R")
+source("src/paper-figures-code/setup-common.R")
 library(dplyr)
 # Australia/Melbourne Daylight savings time changes 2025
 dst_end_mel <- as.POSIXct("2025-04-06 03:00:00", tz = "Australia/Melbourne")

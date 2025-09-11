@@ -1,4 +1,4 @@
-source("setup-common.R")
+source("src/paper-figures-code/setup-common.R")
 month_progress <- unlist(lapply(lubridate:::N_DAYS_IN_MONTHS[seq_len(3)], \(x) seq(1, x)/x))
 
 time <- make_date(year = 2025) + 0:89

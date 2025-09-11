@@ -1,4 +1,4 @@
-source("setup-common.R")
+source("src/paper-figures-code/setup-common.R")
 p <- tsibble::pedestrian |>
   dplyr::filter(Date < "2015-02-01") |>
   mutate(

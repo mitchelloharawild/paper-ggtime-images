@@ -1,4 +1,4 @@
-source("setup-common.R")
+source("src/paper-figures-code/setup-common.R")
 library(fable)
 uad <- as_tsibble(USAccDeaths) 
 p <- uad |> 

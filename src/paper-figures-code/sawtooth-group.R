@@ -1,4 +1,4 @@
-source("setup-common.R")
+source("src/paper-figures-code/setup-common.R")
 # Using the NYT Floyd data to show sawtooth effect by missing the group by type
 p <- readr::read_csv("src/chi26-figures/nyt-floyd.csv") |> 
   ggplot(aes(x = year, y = percent_change)) +
