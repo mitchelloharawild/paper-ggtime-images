@@ -31,4 +31,4 @@ p <- ped_sth_cross |>
   labs(x = NULL, y = "Hourly pedestrian count") +
   theme(legend.position = "none")
 
-ggsave("plots/plot-forecast.png", plot = p, width = 12, height = 8, units = "cm")
+ggsave("plots/plot-forecast.pdf", plot = p, width = 12, height = 8, units = "cm")

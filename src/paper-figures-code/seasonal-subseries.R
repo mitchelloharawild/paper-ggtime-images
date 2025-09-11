@@ -7,4 +7,4 @@ p <- aus_production |>
     panel.background = element_rect(fill = "white", colour = "black")
   )
 p
-ggsave("plots/plot-seasonal-subseries.png", plot = p, width = 12, height = 8, units = "cm")
+ggsave("plots/plot-seasonal-subseries.pdf", plot = p, width = 12, height = 8, units = "cm")
