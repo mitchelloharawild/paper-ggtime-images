@@ -15,4 +15,4 @@ p <- as_tsibble(USAccDeaths) |>
   ) +
   labs(x = NULL, y = "Monthly Accidental Deaths in the USA")
 p 
-ggsave("plots/plot-overlap-polar.png", plot = p, width = 12, height = 8, units = "cm")
+ggsave("plots/plot-overlap-polar.svg", plot = p, width = 12, height = 8, units = "cm")

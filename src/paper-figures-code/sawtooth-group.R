@@ -17,4 +17,4 @@ p <- readr::read_csv("src/chi26-figures/nyt-floyd.csv") |>
   ) +
   scale_color_manual(values = c("Homicides" = col_homicide, "Police killings" = col_police_killings))
 p
-ggsave("plots/plot-sawtooth-group.png", plot = p, width = 12, height = 8, units = "cm")
+ggsave("plots/plot-sawtooth-group.svg", plot = p, width = 12, height = 8, units = "cm")
