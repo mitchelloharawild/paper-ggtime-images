@@ -23,10 +23,10 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="19.181392"
-     inkscape:cx="53.645741"
-     inkscape:cy="40.06487"
-     inkscape:window-width="1870"
+     inkscape:zoom="4.795348"
+     inkscape:cx="-3.336567"
+     inkscape:cy="76.011167"
+     inkscape:window-width="1920"
      inkscape:window-height="1052"
      inkscape:window-x="0"
      inkscape:window-y="0"
@@ -36,6 +36,13 @@
   <!-- Top time series (primary) -->
   <!-- Middle time series (primary) -->
   <!-- Bottom time series (secondary) -->
+  <rect
+     style="fill:#ffffff;stroke-width:0.38943;stroke-linejoin:round"
+     id="rect1"
+     width="18.101999"
+     height="12.749"
+     x="0.00096321106"
+     y="1.7166138e-05" />
   <path
      style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
      d="M 0.07500027,0.075001 V 12.673859"

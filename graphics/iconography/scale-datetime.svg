@@ -26,7 +26,7 @@
      inkscape:zoom="5.727315"
      inkscape:cx="33.785465"
      inkscape:cy="26.801389"
-     inkscape:window-width="1870"
+     inkscape:window-width="1920"
      inkscape:window-height="1052"
      inkscape:window-x="0"
      inkscape:window-y="0"
@@ -36,6 +36,13 @@
   <!-- Top time series (primary) -->
   <!-- Middle time series (primary) -->
   <!-- Bottom time series (secondary) -->
+  <rect
+     style="fill:#ffffff;stroke-width:0.38943;stroke-linejoin:round"
+     id="rect1"
+     width="18.101999"
+     height="12.749"
+     x="0.00096321106"
+     y="1.7166138e-05" />
   <path
      id="path10"
      style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"

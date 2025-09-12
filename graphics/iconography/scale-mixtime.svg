@@ -44,10 +44,10 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="20.09275"
-     inkscape:cx="11.173185"
-     inkscape:cy="8.8838015"
-     inkscape:window-width="1870"
+     inkscape:zoom="5.8275389"
+     inkscape:cx="11.153937"
+     inkscape:cy="22.393673"
+     inkscape:window-width="1920"
      inkscape:window-height="1052"
      inkscape:window-x="0"
      inkscape:window-y="0"
@@ -57,11 +57,18 @@
   <!-- Top time series (primary) -->
   <!-- Middle time series (primary) -->
   <!-- Bottom time series (secondary) -->
+  <rect
+     style="fill:#ffffff;stroke-width:0.38943;stroke-linejoin:round"
+     id="rect1"
+     width="18.101999"
+     height="12.749"
+     x="0.00096321106"
+     y="1.7166138e-05" />
   <path
      id="path10"
      style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
-     d="M 18.086218,12.674034 2.7368907e-7,12.673968 M 18.086218,8.474356 2.7368907e-7,8.474312 M 18.086218,4.274678 2.7368907e-7,4.274656 M 18.086218,0.075 H 2.7368907e-7 M 14.719712,0.075001 v 12.599 m -3.366505,-12.599 V 12.673859 M 7.986701,0.075001 V 12.673859 M 4.6201953,0.075001 V 12.673859 M 0.07500027,0.075001 v 12.598858"
-     sodipodi:nodetypes="cccccccccccccccccc" />
+     d="M 18.086,12.674 2.7368907e-7,12.673968 M 18.086218,8.474356 2.7368907e-7,8.474312 M 18.086218,4.274678 2.7368907e-7,4.274656 M 18.086218,0.075 H 2.7368907e-7 M 14.719712,0.075001 v 12.599 m -3.366505,-12.599 V 12.673859 M 7.986701,0.075001 V 12.673859 M 4.6201953,0.075001 V 12.673859 M 0.07500027,0.075001 V 12.673859 M 18.027121,0.075 v 12.599"
+     sodipodi:nodetypes="cccccccccccccccccccc" />
   <path
      d="m 4.8505525,2.6980231 1.8782386,0.8751516 3.102113,-1.8495713 3.1021129,1.8893385 3.102114,-2.1745446 1.978206,1.6516371"
      style="fill:none;stroke:#333333;stroke-width:0.25805;stroke-linecap:round;stroke-dasharray:none;marker-mid:url(#Dot)"
@@ -107,7 +114,7 @@
      id="text3"><tspan
        sodipodi:role="line"
        id="tspan3"
-       style="stroke-width:0.2"></tspan></text>
+       style="stroke-width:0.2" /></text>
   <text
      xml:space="preserve"
      style="font-size:3.10444px;line-height:1.1;font-family:'Ubuntu Sans';-inkscape-font-specification:'Ubuntu Sans';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.2;stroke-linejoin:round"

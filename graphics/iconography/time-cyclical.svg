@@ -5,7 +5,7 @@
    viewBox="0 0 18.103926 12.749034"
    version="1.1"
    id="svg7"
-   sodipodi:docname="time-linear.svg"
+   sodipodi:docname="time-cyclical.svg"
    inkscape:version="1.4.2 (1:1.4.2+202505120737+ebf0e940d0)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -44,9 +44,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="7.9727848"
-     inkscape:cx="34.805906"
+     inkscape:cx="34.68048"
      inkscape:cy="-0.43899341"
-     inkscape:window-width="1870"
+     inkscape:window-width="1920"
      inkscape:window-height="1052"
      inkscape:window-x="0"
      inkscape:window-y="0"
@@ -56,6 +56,13 @@
   <!-- Top time series (primary) -->
   <!-- Middle time series (primary) -->
   <!-- Bottom time series (secondary) -->
+  <rect
+     style="fill:#ffffff;stroke-width:0.38943;stroke-linejoin:round"
+     id="rect1"
+     width="18.101999"
+     height="12.749"
+     x="0.00096321106"
+     y="1.7166138e-05" />
   <path
      id="path10"
      style="stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
