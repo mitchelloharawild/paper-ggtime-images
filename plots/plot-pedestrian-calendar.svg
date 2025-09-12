@@ -56,13 +56,6 @@
     }
   ]]></style>
     </defs>
-    <rect
-       width="100%"
-       height="75.362534%"
-       style="fill:#ffffff;stroke:none;stroke-width:0.868116"
-       id="rect1"
-       x="0"
-       y="0" />
     <defs
        id="defs2">
       <clipPath
@@ -75,6 +68,18 @@
            id="rect2" />
       </clipPath>
     </defs>
+    <g
+       clip-path="url(#cpMC4wMHwzNDAuMTZ8MC4wMHwyMjYuNzc=)"
+       id="g3"
+       transform="scale(1,0.75362532)">
+      <rect
+         x="0"
+         y="0"
+         width="340.16"
+         height="226.77"
+         style="fill:#ffffff;stroke:none;stroke-width:1.07"
+         id="rect3" />
+    </g>
     <defs
        id="defs4">
       <clipPath
