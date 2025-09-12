@@ -24,14 +24,14 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="8.0345773"
-     inkscape:cx="29.621969"
+     inkscape:cx="29.559738"
      inkscape:cy="37.151923"
      inkscape:window-width="1920"
      inkscape:window-height="1052"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="g1" />
+     inkscape:current-layer="svg7" />
   <!-- Coordinate grid -->
   <!-- Top time series (primary) -->
   <!-- Middle time series (primary) -->
@@ -60,5 +60,10 @@
        style="fill:none;stroke:#333333;stroke-width:0.529167;stroke-linecap:round;stroke-dasharray:none"
        d="M 0.2645835,9.6914009 1.803395,8.1313248 3.590774,8.8285685 5.3733545,7.0430064 7.1819082,7.6597254"
        id="path3" />
+    <path
+       id="path10"
+       style="fill:none;fill-opacity:1;stroke:#8a8a8a;stroke-width:0.114909;stroke-dasharray:0.22982;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 0.0083892,9.9112963 13.5531928,5.2e-5 -0.04293,-2.6e-5 0.02145,-9.86668618 H 0.0364904 l 0.028101,9.86657518"
+       sodipodi:nodetypes="cccccc" />
   </g>
 </svg>

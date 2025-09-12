@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   width="11.882466mm"
-   height="11.882466mm"
-   viewBox="0 0 11.882466 11.882466"
+   width="18.170443mm"
+   height="12.749032mm"
+   viewBox="0 0 18.170442 12.749032"
    version="1.1"
    id="svg7"
    sodipodi:docname="icon-candlestick.svg"
@@ -26,29 +26,27 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="4.8067167"
-     inkscape:cx="-24.861045"
-     inkscape:cy="31.726438"
+     inkscape:zoom="5.6717315"
+     inkscape:cx="40.463834"
+     inkscape:cy="20.187839"
      inkscape:window-width="1920"
      inkscape:window-height="1052"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg7" />
+     inkscape:current-layer="g18" />
   <!-- Coordinate grid -->
   <!-- Top time series (primary) -->
   <!-- Middle time series (primary) -->
   <!-- Bottom time series (secondary) -->
-  <rect
-     style="fill:#ffffff;stroke-width:0.304603;stroke-linejoin:round"
-     id="rect1"
-     width="11.882466"
-     height="11.882466"
-     x="0"
-     y="0" />
+  <path
+     id="path10-8"
+     style="fill:#ffffff;fill-opacity:1;stroke:#8a8a8a;stroke-width:0.15;stroke-dasharray:0.300001;stroke-dashoffset:0;stroke-opacity:1"
+     d="m 0.03772357,12.673966 18.08621843,6.6e-5 -0.05729,-3.3e-5 L 18.095272,0.075 H 0.07522357 l 0.0375,12.598857"
+     sodipodi:nodetypes="cccccc" />
   <g
      id="g30"
-     transform="translate(-0.10084593,-0.09243274)">
+     transform="translate(3.0431419,0.34085025)">
     <path
        style="fill:none;fill-opacity:1;stroke:#35ca77;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="m 1.0661909,5.970567 v 5.264564"
@@ -60,7 +58,7 @@
   </g>
   <g
      id="g29"
-     transform="translate(-0.10084593,-0.09243274)">
+     transform="translate(3.0431419,0.34085025)">
     <path
        style="fill:none;fill-opacity:1;stroke:#35ca77;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="M 2.6933801,3.3073522 V 5.9834827"
@@ -73,7 +71,7 @@
   </g>
   <g
      id="g28"
-     transform="translate(-0.10084593,-0.09243274)">
+     transform="translate(3.0431419,0.34085025)">
     <path
        style="fill:none;fill-opacity:1;stroke:#35ca77;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="M 4.3205693,1.2209827 V 3.2976309"
@@ -86,7 +84,7 @@
   </g>
   <g
      id="g27"
-     transform="translate(-0.10084593,-0.09243274)">
+     transform="translate(3.0431419,0.34085025)">
     <path
        style="fill:none;fill-opacity:1;stroke:#d83636;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="M 5.9477584,3.3111312 V 7.6468795"
@@ -99,7 +97,7 @@
   </g>
   <g
      id="g26"
-     transform="translate(-0.10084593,-0.09243274)">
+     transform="translate(3.0431419,0.34085025)">
     <path
        style="fill:none;fill-opacity:1;stroke:#35ca77;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="m 7.5749476,5.0145975 v 2.632282"
@@ -112,7 +110,7 @@
   </g>
   <g
      id="g25"
-     transform="translate(-0.10084593,-0.09243274)">
+     transform="translate(3.0431419,0.34085025)">
     <path
        style="fill:none;fill-opacity:1;stroke:#d83636;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="M 9.2021368,5.0145975 V 6.562079"
@@ -125,7 +123,7 @@
   </g>
   <g
      id="g24"
-     transform="translate(-0.10084593,-0.09243274)">
+     transform="translate(3.0431419,0.34085025)">
     <path
        style="fill:none;fill-opacity:1;stroke:#35ca77;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="M 10.829326,2.9224333 V 6.562079"
@@ -134,6 +132,33 @@
        style="fill:none;fill-opacity:1;stroke:#35ca77;stroke-width:0.1;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="M 10.829326,8.5972368 V 1.2992976"
        id="path14"
+       sodipodi:nodetypes="cc" />
+  </g>
+  <g
+     id="g16"
+     transform="translate(-6.5913566,-0.22954509)">
+    <path
+       style="fill:none;fill-opacity:1;stroke:#d83636;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       d="M 9.2021368,5.0145975 V 6.562079"
+       id="path15" />
+    <path
+       style="fill:none;stroke:#d83636;stroke-width:0.1;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       d="M 9.2021368,7.702023 V 2.6810407"
+       id="path16"
+       sodipodi:nodetypes="cc" />
+  </g>
+  <g
+     id="g18"
+     transform="translate(9.6392665,-0.07541004)">
+    <path
+       style="fill:none;fill-opacity:1;stroke:#d83636;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       d="m 5.9477584,3.3111312 0,1.6308828"
+       id="path17"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#d83636;stroke-width:0.1;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       d="m 5.9477584,6.4685843 0,-3.3788591"
+       id="path18"
        sodipodi:nodetypes="cc" />
   </g>
 </svg>
