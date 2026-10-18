@@ -170,7 +170,7 @@ Timezones are usually only associated with `POSIXt` date-times, however timezone
 
 The ggtime package instead defaults to plotting in civil time (also known as local or clock time). Human activities are usually scheduled in local time, so seasonality and other calendar patterns are more evident in local time. With mixtime, timezones can be specified with all temporal granularities (dates, yearmonth, ...), allowing for more precise positioning of time in different timezones.
 
-|                  | ggplot2         | ggtime (default) `position_civil()` | ggtime `position_absolute()` |
+|                  | ggplot2         | ggtime (default) `time_chronon` with `tz = NA` | ggtime `time_chronon` with a fixed `tz` |
 |------------------|:---------------:|:-----------------:|:-----------------:|
 | **POSIXt**       | Absolute        | Civil             | Absolute          |
 | **Date**         | Civil*          | Civil             | Absolute          |
@@ -241,7 +241,7 @@ pedestrian |>
   ) |>
   ggplot(aes(x = Date_Time, y = Count)) +
   geom_time_line() +
-  geom_point(position = position_time_civil()) +
+  geom_point() +
   facet_grid(
     cols = vars(Date),
     scales = "free_x",
@@ -252,7 +252,13 @@ pedestrian |>
       )
     )
   ) +
-  scale_x_datetime(date_labels = "%H:%M") +
+  # A common chronon without a timezone (tz = NA) places time in civil (local) time
+  scale_x_mixtime(
+    time_chronon = mixtime::cal_gregorian$hour(1L, tz = NA),
+    time_labels = "{cyc(hour, day)}:00",
+    # Shade up to the start of the `xmax` hour, rather than its end
+    align_discrete = aes_nudge(right = 0)
+  ) +
   geom_rect(
     aes(xmin = xmin, xmax = xmax),
     ymin = -Inf,
@@ -276,7 +282,7 @@ pedestrian |>
   labs(x = "Civil time (Australia/Melbourne)")
 ```
 
-If you want to see the absolute time values instead, you can use `position_time_absolute()`.
+If you want to see the absolute time values instead, you can use a common chronon with a fixed timezone (e.g. `time_chronon = mixtime::cal_gregorian$hour(1L, tz = "Australia/Melbourne")`).
 ```{r}
 #| label: dst-absolute
 pedestrian |>
@@ -285,8 +291,8 @@ pedestrian |>
     Date %in% as.Date(c("2015-04-05", "2015-10-04"))
   ) |>
   ggplot(aes(x = Date_Time, y = Count)) +
-  geom_time_line(position = position_time_absolute()) +
-  geom_point(position = position_time_absolute()) +
+  geom_time_line() +
+  geom_point() +
   facet_grid(
     cols = vars(Date),
     scales = "free_x",
@@ -297,13 +303,17 @@ pedestrian |>
       )
     )
   ) +
-  scale_x_datetime(date_labels = "%H:%M") + 
+  # A common chronon with a fixed timezone places time in absolute time
+  scale_x_mixtime(
+    time_chronon = mixtime::cal_gregorian$hour(1L, tz = "Australia/Melbourne"),
+    time_labels = "{cyc(hour, day)}:00"
+  ) + 
   labs(x = "Absolute time (Australia/Melbourne)")
 ```
 
 <!-- Daily -->
 
-Differences in timezones are also relevant for precisely positioning daily data. Consider pedestrian counts in Melbourne (timezone Australia/Melbourne) and in London (timezone Europe/London). The data is collected over the same dates, but the local time of day is different due to the timezone difference. The ggtime package positions dates in civil time by default (matching ggplot2), but the relative position of dates in different timezones can be shown with `position_time_absolute()`.
+Differences in timezones are also relevant for precisely positioning daily data. Consider pedestrian counts in Melbourne (timezone Australia/Melbourne) and in London (timezone Europe/London). The data is collected over the same dates, but the local time of day is different due to the timezone difference. The ggtime package positions dates in civil time by default (matching ggplot2), but the relative position of dates in different timezones can be shown in absolute time with a fixed-timezone `time_chronon` in `scale_x_mixtime()`.
 
 Note: storing timezone information with dates requires the mixtime package, which is currently in development. The example below uses a helper function `force_tzs()` to add timezone information to `Date` dates for demonstration purposes.
 
@@ -444,7 +454,8 @@ as_tsibble(USAccDeaths) |>
 ```{r}
 #| label: coord-loop-ggtime-cartesian
 uad |> 
-  ggplot(aes(x=index, y=value)) +
+  # Monthly time points are centred within each month (replacing `ljust`)
+  ggplot(aes(x=mixtime::yearmonth(index), y=value)) +
   geom_line() +
   geom_point(aes(colour = year(index)), size = 2) +
   geom_vline(
@@ -452,10 +463,10 @@ uad |>
     linetype = "dashed",
     colour = "grey50"
   ) +
-  coord_loop(time_loop = "1 year", expand = FALSE, ljust = 14)
+  coord_loop(time_loops = mixtime::years(1L), expand = FALSE)
 ```
 
-**Loop in ggtime with coord_loop(polar = TRUE)**
+**Loop in ggtime with coord_loop(coord = coord_radial())**
 
 WIP awaiting mjskay to extend coord_loop() to clip polar projected rectangles.
 
@@ -463,10 +474,10 @@ WIP awaiting mjskay to extend coord_loop() to clip polar projected rectangles.
 #| label: coord-loop-ggtime-polar
 #| eval: false
 as_tsibble(USAccDeaths) |>
-  ggplot(aes(x = index, y = value)) +
+  ggplot(aes(x = mixtime::yearmonth(index), y = value)) +
   geom_line() +
   geom_point(aes(colour = year(index)), size = 2) +
-  coord_loop(time_loop = "1 year", polar = TRUE) +
+  coord_loop(time_loops = mixtime::years(1L), coord = coord_radial()) +
   labs(x = "Month", y = "Deaths") 
 ```
 
@@ -688,7 +699,7 @@ ggplot(data = tibble::tibble(
 )) + 
   ggdist::stat_ribbon(aes(x = time, ydist = dist)) + 
   scale_fill_brewer() + 
-  ggtime::coord_calendar(time_rows = "1 week")
+  ggtime::coord_calendar(rows = mixtime::weeks(1L), panes = NULL, cols = NULL, label_cells = NULL)
 ```
 
 ## Temporal resolution / aggregation
@@ -913,8 +924,8 @@ library(patchwork)
 
 Stretch goal, requires:
 
-* `coord_loop()` to support specific loop points (`loop` not just `time_loop`).
-* `scale_*_mixtime()` to support warp points (`warp` and `time_warp`).
+* `coord_loop()` to support specific loop points (`loops` not just `time_loops`).
+* `scale_*_mixtime()` to support warp points (`transform = transform_warp()`).
 
 ```{r}
 #| label: find-peaks
@@ -966,11 +977,11 @@ Hypothetical `coord_loop()` looping at these peak points:
 ```{r}
 #| label: lynx-peaks-loop
 tsibbledata::pelt |> 
-  ggplot(aes(x = Year, y = Lynx)) + 
+  ggplot(aes(x = mixtime::year(as.integer(Year)), y = Lynx)) + 
   geom_line() + 
   geom_point(size = 3, colour = "red", 
              data = slice(tsibbledata::pelt, find_peaks(Lynx))) +
-  coord_loop(loop = slice(tsibbledata::pelt, find_peaks(Lynx))$Year)
+  coord_loop(loops = mixtime::year(as.integer(slice(tsibbledata::pelt, find_peaks(Lynx))$Year)))
 ```
 
 
