@@ -27,7 +27,7 @@ p <- ped_sth_cross |>
   ) |>
   forecast(h = "10 days") |> 
   autoplot(filter(ped_sth_cross, Date > as.Date("2015-03-15"))) + 
-  coord_calendar(time_rows = "1 week") + 
+  coord_calendar(rows = mixtime::weeks(1L), panes = NULL, cols = NULL, label_cells = NULL) + 
   labs(x = NULL, y = "Hourly pedestrian count") +
   theme(legend.position = "none")
 
