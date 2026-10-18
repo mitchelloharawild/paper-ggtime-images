@@ -428,7 +428,7 @@ uad |>
     linetype = "dashed",
     colour = "grey50"
   ) +
-  coord_loop(time_loop = "1 year", expand = FALSE)
+  coord_loop(time_loops = mixtime::years(1L), expand = FALSE)
 ```
 
 <!-- TODO: Add vline reference lines to visually indicate the differences between this and the usual/previous graphic -->
@@ -469,9 +469,9 @@ The looped coordinate space exists as a coordinate space transformation, and so 
 ```{r}
 #| eval: false
 as_tsibble(USAccDeaths) |>
-  ggplot(aes(x = index, y = value)) +
+  ggplot(aes(x = mixtime::yearmonth(index), y = value)) +
   geom_line() +
-  coord_loop(time_loop = "1 year", coord = coord_polar()) +
+  coord_loop(time_loops = mixtime::years(1L), coord = coord_radial()) +
   labs(x = "Month", y = "Deaths") 
 ```
 
