@@ -62,7 +62,12 @@ dst_civil_ggtime <- dst_change |>
     scales = "free_x"
   ) +
   scale_y_continuous(minor_breaks = NULL) +
-  scale_x_datetime(minor_breaks = NULL, date_labels = "%I%p", date_breaks = "1 hour") +
+  # A common chronon without a timezone (tz = NA) places time in civil (local) time
+  scale_x_mixtime(
+    time_chronon = mixtime::cal_gregorian$hour(1L, tz = NA),
+    minor_breaks = NULL, time_breaks = mixtime::hours(1L),
+    time_labels = "{cyc(hour, ampm)}{cyc(ampm, day, label = TRUE)}"
+  ) +
   labs(x = NULL, y = NULL)
 ggsave(
   "graphics/dst-subfig/dst-civil-ggtime.svg",
@@ -73,10 +78,9 @@ ggsave(
 
 dst_civil_ggplot2 <- dst_change |>
   ggplot(aes(x = time, y = values)) +
-  geom_line(position = position_time_civil()) +
+  geom_line() +
   geom_line(aes(x = reftime), colour = NA) +
   geom_line(
-    position = position_time_civil(),
     data = dst_change[c(2:3, 8:9), ],
     colour = "red",
     linewidth = 1
@@ -87,7 +91,12 @@ dst_civil_ggplot2 <- dst_change |>
     scales = "free_x"
   ) +
   scale_y_continuous(minor_breaks = NULL) +
-  scale_x_datetime(minor_breaks = NULL, date_labels = "%I%p", date_breaks = "1 hour") +
+  # A common chronon without a timezone (tz = NA) places time in civil (local) time
+  scale_x_mixtime(
+    time_chronon = mixtime::cal_gregorian$hour(1L, tz = NA),
+    minor_breaks = NULL, time_breaks = mixtime::hours(1L),
+    time_labels = "{cyc(hour, ampm)}{cyc(ampm, day, label = TRUE)}"
+  ) +
   labs(x = NULL, y = NULL)
 ggsave(
   "graphics/dst-subfig/dst-civil-ggplot2.svg",
