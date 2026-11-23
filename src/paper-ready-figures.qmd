@@ -352,13 +352,21 @@ p1 <- (readr::read_csv("src/chi26-figures/nyt-floyd.csv") |>
 p1
 
 p2 <- (readr::read_csv("src/chi26-figures/nyt-floyd.csv") |> 
+  # Repeat the last value at the end of its year, so the step spans all of 2024
+  (\(x) bind_rows(x, mutate(filter(x, year == max(year)), year = year + 1)))() |>
   ggplot(aes(x = year, y = percent_change, colour = type)) +
   geom_step(linewidth = 1.2)) |> 
   nyt_floyd_plot_common() + 
   labs(title = NULL, subtitle = NULL) + 
+  theme(axis.text.x = element_text(size = 9)) +
+  # Unlabelled tick at the end of 2024
+  scale_x_continuous(
+    breaks = 2015:2025, labels = c(2015:2024, ""),
+    expand = c(0, 0.2)
+  ) +
   # Add annotation for George Floyd's death
   annotate(
-    "label", x = 2017.7, y = 40, label = "Death of George Floyd\nMay 25, 2020", 
+    "label", x = 2017.4, y = 40, label = "Death of George Floyd\nMay 25, 2020", 
      hjust = 0.5, vjust = 0.3, size = 4, color = "gray30", fill = "#ffffff99", border.colour = "transparent"
   ) +
   # Add direct labels for the lines
@@ -397,8 +405,8 @@ p3 <- (readr::read_csv("src/chi26-figures/nyt-floyd.csv") |>
 p3
 
 ggsave("plots/nyt-subfig/plot-nyt-floyd-original.svg", plot = p1, width = 8, height = 3, units = "in")
-ggsave("plots/nyt-subfig/plot-nyt-floyd-step.svg", plot = p2, width = 4, height = 3, units = "in")
-ggsave("plots/nyt-subfig/plot-nyt-floyd-align.svg", plot = p3, width = 4, height = 3, units = "in")
+ggsave("plots/nyt-subfig/plot-nyt-floyd-step.svg", plot = p2, width = 4, height = 2.3, units = "in")
+ggsave("plots/nyt-subfig/plot-nyt-floyd-align.svg", plot = p3, width = 4, height = 2.3, units = "in")
 ```
 
 
@@ -492,7 +500,14 @@ dst_change <- bind_rows(
   .id = "DST"
 ) |>
   group_by(DST) |>
-  mutate(reftime = lubridate::force_tz(time[1], "UTC") + 3600 * (1:n() - 1L))
+  mutate(
+    reftime = lubridate::force_tz(time[1], "UTC") + 3600 * (1:n() - 1L),
+    # Observations at exact instants, so the DST transition is located precisely
+    localtime = mixtime::mixtime(
+      time,
+      chronon = mixtime::cal_gregorian$second(1L, tz = "Australia/Melbourne")
+    )
+  )
 
 dst_abs <- dst_change |>
   ggplot(aes(x = time, y = values)) +
@@ -520,25 +535,38 @@ dst_abs <- dst_change |>
   labs(x = NULL, y = NULL)
 ggsave("graphics/dst-subfig/dst-absolute.svg", dst_abs, width = 6, height = 2)
 
+# Breaks at the start of each hour (hourly granule breaks are centred by default)
+hour_starts <- mixtime::mixtime(
+  c(
+    as.POSIXct("2025-04-06", tz = "UTC") + 3600 * (0:5),
+    as.POSIXct("2025-10-05", tz = "UTC") + 3600 * (0:5)
+  ),
+  chronon = mixtime::cal_gregorian$second(1L, tz = NA)
+)
+
 dst_civil_ggtime <- dst_change |>
-  ggplot(aes(x = time, y = values)) +
+  ggplot(aes(x = localtime, y = values)) +
   geom_time_line() +
   geom_line(aes(x = reftime), colour = NA) +
   geom_time_line(
     data = dst_change[c(2:3, 8:9), ],
     colour = "red",
-    linewidth = 1
+    linewidth = 1,
+    transitions = mixtime::tz_transitions(
+      min(dst_change$time) - 86400, max(dst_change$time) + 86400
+    ),
+    transition_aesthetics = list(linetype = 2, colour = "black", linewidth = 0.5)
   ) +
   facet_grid(
-    rows = vars("Civil Time\n(ggtime::geom_time_line)"),
+    rows = vars("Local Time\n(ggtime::geom_time_line)"),
     cols = vars(DST),
     scales = "free_x"
   ) +
   scale_y_continuous(minor_breaks = NULL) +
-  # A common chronon without a timezone (tz = NA) places time in civil (local) time
+  # A common chronon without a timezone (tz = NA) places time in local time
   scale_x_mixtime(
     time_chronon = mixtime::cal_gregorian$hour(1L, tz = NA),
-    minor_breaks = NULL, time_breaks = mixtime::hours(1L),
+    minor_breaks = NULL, breaks = hour_starts,
     time_labels = "{cyc(hour, ampm)}{cyc(ampm, day, label = TRUE)}"
   ) +
   labs(x = NULL, y = NULL)
@@ -550,7 +578,7 @@ ggsave(
 )
 
 dst_civil_ggplot2 <- dst_change |>
-  ggplot(aes(x = time, y = values)) +
+  ggplot(aes(x = localtime, y = values)) +
   geom_line() +
   geom_line(aes(x = reftime), colour = NA) +
   geom_line(
@@ -559,15 +587,15 @@ dst_civil_ggplot2 <- dst_change |>
     linewidth = 1
   ) +
   facet_grid(
-    rows = vars("Civil Time\n(ggplot2::geom_line)"),
+    rows = vars("Local Time\n(ggplot2::geom_line)"),
     cols = vars(DST),
     scales = "free_x"
   ) +
   scale_y_continuous(minor_breaks = NULL) +
-  # A common chronon without a timezone (tz = NA) places time in civil (local) time
+  # A common chronon without a timezone (tz = NA) places time in local time
   scale_x_mixtime(
     time_chronon = mixtime::cal_gregorian$hour(1L, tz = NA),
-    minor_breaks = NULL, time_breaks = mixtime::hours(1L),
+    minor_breaks = NULL, breaks = hour_starts,
     time_labels = "{cyc(hour, ampm)}{cyc(ampm, day, label = TRUE)}"
   ) +
   labs(x = NULL, y = NULL)

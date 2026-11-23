@@ -19,7 +19,14 @@ dst_change <- bind_rows(
   .id = "DST"
 ) |>
   group_by(DST) |>
-  mutate(reftime = lubridate::force_tz(time[1], "UTC") + 3600 * (1:n() - 1L))
+  mutate(
+    reftime = lubridate::force_tz(time[1], "UTC") + 3600 * (1:n() - 1L),
+    # Observations at exact instants, so the DST transition is located precisely
+    localtime = mixtime::mixtime(
+      time,
+      chronon = mixtime::cal_gregorian$second(1L, tz = "Australia/Melbourne")
+    )
+  )
 
 dst_abs <- dst_change |>
   ggplot(aes(x = time, y = values)) +
@@ -47,25 +54,38 @@ dst_abs <- dst_change |>
   labs(x = NULL, y = NULL)
 ggsave("graphics/dst-subfig/dst-absolute.svg", dst_abs, width = 6, height = 2)
 
+# Breaks at the start of each hour (hourly granule breaks are centred by default)
+hour_starts <- mixtime::mixtime(
+  c(
+    as.POSIXct("2025-04-06", tz = "UTC") + 3600 * (0:5),
+    as.POSIXct("2025-10-05", tz = "UTC") + 3600 * (0:5)
+  ),
+  chronon = mixtime::cal_gregorian$second(1L, tz = NA)
+)
+
 dst_civil_ggtime <- dst_change |>
-  ggplot(aes(x = time, y = values)) +
+  ggplot(aes(x = localtime, y = values)) +
   geom_time_line() +
   geom_line(aes(x = reftime), colour = NA) +
   geom_time_line(
     data = dst_change[c(2:3, 8:9), ],
     colour = "red",
-    linewidth = 1
+    linewidth = 1,
+    transitions = mixtime::tz_transitions(
+      min(dst_change$time) - 86400, max(dst_change$time) + 86400
+    ),
+    transition_aesthetics = list(linetype = 2, colour = "black", linewidth = 0.5)
   ) +
   facet_grid(
-    rows = vars("Civil Time\n(ggtime::geom_time_line)"),
+    rows = vars("Local Time\n(ggtime::geom_time_line)"),
     cols = vars(DST),
     scales = "free_x"
   ) +
   scale_y_continuous(minor_breaks = NULL) +
-  # A common chronon without a timezone (tz = NA) places time in civil (local) time
+  # A common chronon without a timezone (tz = NA) places time in local time
   scale_x_mixtime(
     time_chronon = mixtime::cal_gregorian$hour(1L, tz = NA),
-    minor_breaks = NULL, time_breaks = mixtime::hours(1L),
+    minor_breaks = NULL, breaks = hour_starts,
     time_labels = "{cyc(hour, ampm)}{cyc(ampm, day, label = TRUE)}"
   ) +
   labs(x = NULL, y = NULL)
@@ -77,7 +97,7 @@ ggsave(
 )
 
 dst_civil_ggplot2 <- dst_change |>
-  ggplot(aes(x = time, y = values)) +
+  ggplot(aes(x = localtime, y = values)) +
   geom_line() +
   geom_line(aes(x = reftime), colour = NA) +
   geom_line(
@@ -86,15 +106,15 @@ dst_civil_ggplot2 <- dst_change |>
     linewidth = 1
   ) +
   facet_grid(
-    rows = vars("Civil Time\n(ggplot2::geom_line)"),
+    rows = vars("Local Time\n(ggplot2::geom_line)"),
     cols = vars(DST),
     scales = "free_x"
   ) +
   scale_y_continuous(minor_breaks = NULL) +
-  # A common chronon without a timezone (tz = NA) places time in civil (local) time
+  # A common chronon without a timezone (tz = NA) places time in local time
   scale_x_mixtime(
     time_chronon = mixtime::cal_gregorian$hour(1L, tz = NA),
-    minor_breaks = NULL, time_breaks = mixtime::hours(1L),
+    minor_breaks = NULL, breaks = hour_starts,
     time_labels = "{cyc(hour, ampm)}{cyc(ampm, day, label = TRUE)}"
   ) +
   labs(x = NULL, y = NULL)

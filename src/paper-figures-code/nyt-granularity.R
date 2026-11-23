@@ -90,13 +90,21 @@ p1 <- (readr::read_csv("src/chi26-figures/nyt-floyd.csv") |>
 p1
 
 p2 <- (readr::read_csv("src/chi26-figures/nyt-floyd.csv") |> 
+  # Repeat the last value at the end of its year, so the step spans all of 2024
+  (\(x) bind_rows(x, mutate(filter(x, year == max(year)), year = year + 1)))() |>
   ggplot(aes(x = year, y = percent_change, colour = type)) +
   geom_step(linewidth = 1.2)) |> 
   nyt_floyd_plot_common() + 
   labs(title = NULL, subtitle = NULL) + 
+  theme(axis.text.x = element_text(size = 9)) +
+  # Unlabelled tick at the end of 2024
+  scale_x_continuous(
+    breaks = 2015:2025, labels = c(2015:2024, ""),
+    expand = c(0, 0.2)
+  ) +
   # Add annotation for George Floyd's death
   annotate(
-    "label", x = 2017.7, y = 40, label = "Death of George Floyd\nMay 25, 2020", 
+    "label", x = 2017.4, y = 40, label = "Death of George Floyd\nMay 25, 2020", 
      hjust = 0.5, vjust = 0.3, size = 4, color = "gray30", fill = "#ffffff99", border.colour = "transparent"
   ) +
   # Add direct labels for the lines
@@ -135,5 +143,5 @@ p3 <- (readr::read_csv("src/chi26-figures/nyt-floyd.csv") |>
 p3
 
 ggsave("plots/nyt-subfig/plot-nyt-floyd-original.svg", plot = p1, width = 8, height = 3, units = "in")
-ggsave("plots/nyt-subfig/plot-nyt-floyd-step.svg", plot = p2, width = 4, height = 3, units = "in")
-ggsave("plots/nyt-subfig/plot-nyt-floyd-align.svg", plot = p3, width = 4, height = 3, units = "in")
+ggsave("plots/nyt-subfig/plot-nyt-floyd-step.svg", plot = p2, width = 4, height = 2.3, units = "in")
+ggsave("plots/nyt-subfig/plot-nyt-floyd-align.svg", plot = p3, width = 4, height = 2.3, units = "in")
