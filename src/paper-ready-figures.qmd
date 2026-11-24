@@ -1,5 +1,5 @@
 ---
-title: Polished figures for CHI26 paper
+title: Polished figures for the ggtime paper
 format: 
   html:
     code-fold: true

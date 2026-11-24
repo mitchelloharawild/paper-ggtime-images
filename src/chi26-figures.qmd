@@ -315,7 +315,7 @@ pedestrian |>
 
 Differences in timezones are also relevant for precisely positioning daily data. Consider pedestrian counts in Melbourne (timezone Australia/Melbourne) and in London (timezone Europe/London). The data is collected over the same dates, but the local time of day is different due to the timezone difference. The ggtime package positions dates in civil time by default (matching ggplot2), but the relative position of dates in different timezones can be shown in absolute time with a fixed-timezone `time_chronon` in `scale_x_mixtime()`.
 
-Note: storing timezone information with dates requires the mixtime package, which is currently in development. The example below uses a helper function `force_tzs()` to add timezone information to `Date` dates for demonstration purposes.
+Note: storing timezone information with dates requires the mixtime package. The example below uses a helper function `force_tzs()` to add timezone information to `Date` dates for demonstration purposes.
 
 ```{r}
 #| label: pedestrian-mel-lon

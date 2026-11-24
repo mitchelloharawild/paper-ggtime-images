@@ -1,12 +1,32 @@
 ---
-title: Images for Crossmaps Project
+title: Images for the ggtime paper
 format: gfm
 code-copy: true
 ---
 
+Figures, icons and plots for the ggtime paper, an implementation of a grammar of graphics for temporal data in ggplot2 (see [ggtime](https://github.com/mitchelloharawild/ggtime) and [mixtime](https://github.com/mitchelloharawild/mixtime)).
+
+## Repository layout
+
+- `graphics/`: diagrams, icons (`graphics/iconography/`) and composed figures (e.g. the teaser and component icons), drawn in Figma or similar, or assembled from plots.
+- `plots/`: programmatically generated plots (ggplot2 / ggtime), including SVG sub-figures in `plots/nyt-subfig/`.
+- `external/`: figures reproduced from other sources, see below.
+- `illustrations/` and `screenshots/`: hand-drawn illustrations and screenshots (currently empty).
+- `src/`: the R code that generates the plots.
+  - `src/paper-figures-code/`: one script per paper figure. Each starts with `source("src/paper-figures-code/setup-common.R")` and writes to `plots/` or `graphics/` with `ggsave()`.
+  - `src/paper-ready-figures.qmd`: polished figures for the paper.
+  - `src/chi26-figures.qmd`, `src/chi26-figures-CH.qmd`: earlier draft figures for the CHI26 submission.
+  - `src/timeviz-pain.qmd`: examples of problematic time visualisation in ggplot2, and how ggtime handles them.
+
+Run scripts from the repository root, as paths are relative to it. Packages are managed with renv (`renv::restore()`). The figures need current development versions of ggtime and mixtime.
+
 ## External sources
 
-- gus-lipkin images comes from: <https://guslipkin.me/professional-blog/2022-04-14-reordering-bar-and-column-charts-with-ggplot-in-r>
+- `external/gus-lipkin-blogpost.*`: <https://guslipkin.me/professional-blog/2022-04-14-reordering-bar-and-column-charts-with-ggplot-in-r>
+- `external/nyt-george-floyd.*`: New York Times graphic on George Floyd and homicide / police killings.
+- `external/aigner-discrete-granularities.*`: discrete granularities figure from Aigner et al.
+- `external/tradingview-candlestick.png`: TradingView candlestick chart.
+- `external/PGoG/`: figures from the Practical Grammar of Graphics (PGoG).
 
 ## Submoduling Instructions
 
@@ -15,7 +35,7 @@ Run these commands from inside the target repo (i.e. the one you want these imag
 To add the contents of the latest commit of the default branch of this repo as the folder `images/`:
 
 ```zsh
-git submodule add <repo-url.git> images
+git submodule add git@github.com:mitchelloharawild/paper-ggtime-images.git images
 ```
 
 Updating contents to match the latest commit:
@@ -32,17 +52,14 @@ git submodule update --remote --rebase
 
 ## Folder & File Naming conventions
 
-Folders:
-
-- `illustrations` is for anything hand-drawn
-- `screenshots` is for screenshots
-- `plots` is for programmatically generated plots (e.g. using ggplot2)
-- `graphics` is for diagrams etc produced using figma, pptx etc.
+Folders: see the repository layout above.
 
 File prefixes:
 
-- `diagram_`
-- `icon_`
+- `plot-`: generated plots (`plots/`)
+- `fig-`: composed paper figures (`graphics/`, and some in `plots/`)
+- `graphic-`: diagrams
+- `icon-`, `coord-`, `geom-`, `scale-`, `facet-`, etc.: grammar component icons in `graphics/iconography/`
 
 ## Useful ImageMagick Commands
 
@@ -62,6 +79,7 @@ move the file `pre-commit` to `.git/hooks/` and make the script executable:
 `chmod +x .git/hooks/pre-commit`
 
 To skip the render when you commit add the `--no-verify` flag:
+
 ```
 git commit --no-verify
 ```

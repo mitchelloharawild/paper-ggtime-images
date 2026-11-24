@@ -1,7 +1,7 @@
 source("src/paper-figures-code/setup-common.R")
 library(grid)
 
-# Requires stat_summary_time(), from the development version of ggtime
+# Requires stat_summary_time() from ggtime
 
 # Quarterly gas production in Australia, as available after the first quarter of
 # 2010. The first quarter is always low, so its mean isn't comparable with a year
