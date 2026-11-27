@@ -35,5 +35,5 @@ p <- ggplot(pedestrian_hourly, aes(time, thousands)) +
     ggtime.calendar.cell.line = element_line(linewidth = 0.3),
     plot.margin = margin(1, 1, 1, 1)
   )
-ggsave("plots/plot-calendar.pdf", p, width = 8.5, height = 4.5, units = "cm", device = cairo_pdf)
-ggsave("plots/plot-calendar.png", p, width = 8.5, height = 4.5, units = "cm", dpi = 400, bg = "white")
+ggsave("plots/plot-calendar.pdf", p, width = 8.5, height = 3.35, units = "cm", device = cairo_pdf)
+ggsave("plots/plot-calendar.png", p, width = 8.5, height = 3.35, units = "cm", dpi = 400, bg = "white")
